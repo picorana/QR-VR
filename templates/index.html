@@ -3,13 +3,21 @@
 
 <head>
 	<script src='../static/js/lib/threejs/build/three.js'></script>
+	<script src='../static/js/lib/threejs/examples/js/renderers/CanvasRenderer.js'></script>
+	<script src='../static/js/lib/threejs/examples/js/renderers/Projector.js'></script>
 	<script src='../static/js/lib/threeVR/js/DeviceOrientationController.js'></script>
-	
+	<style>
+			body {
+				background-color: rgb(10,10,10);
+				margin: 0px;
+				overflow: hidden;
+			}
+	</style>
 </head>
 
 <body>
-	<div id="thing">data here</div>
-
-	<canvas id="renderCanvas"></canvas>
+	<!--<div id="thing">data here</div>-->
+	<!--<img src="{{url_for('static', filename='assets/Pikachu.png')}}" />-->
+	<div id="container"></div>
 	<script src='../static/js/main.js'></script>
 </body>
