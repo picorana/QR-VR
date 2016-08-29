@@ -1,4 +1,4 @@
-var camera, scene, renderer, controls, cube, texture_placeholder, container;
+var camera, scene, renderer, controls, cube, texture_placeholder, container, pikaplane;
 
 
 function tilt(data){
@@ -43,9 +43,7 @@ function init(){
 
     //renderer = new THREE.WebGLRenderer();
     renderer = new THREE.CanvasRenderer();
-    renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
-    //document.body.appendChild( renderer.domElement );
     container.appendChild(renderer.domElement);
 
     controls = new DeviceOrientationController( camera, renderer.domElement );
@@ -55,21 +53,31 @@ function init(){
 
     //CREATE SKYBOX
     var materials = [
-		loadTexture( '/static/assets/skybox/skybox_px.jpg' ), // right
-		loadTexture( '/static/assets/skybox/skybox_nx.jpg' ), // left
+		loadTexture( '/static/assets/skybox/skybox_pz.jpg' ), // right
+		loadTexture( '/static/assets/skybox/skybox_px.jpg' ), // left
 		loadTexture( '/static/assets/skybox/skybox_py.jpg' ), // top
 		loadTexture( '/static/assets/skybox/skybox_ny.jpg' ), // bottom
-		loadTexture( '/static/assets/skybox/skybox_pz.jpg' ), // back
-		loadTexture( '/static/assets/skybox/skybox_nz.jpg' )  // front
+		loadTexture( '/static/assets/skybox/skybox_nz.jpg' ), // back
+		loadTexture( '/static/assets/skybox/skybox_nx.jpg' )  // front
 	];
 	var mesh = new THREE.Mesh( new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7 ), new THREE.MultiMaterial( materials ) );
 	mesh.scale.x = - 1;
 	scene.add( mesh );
 
+	//var pikatexture = THREE.TextureLoader( "/static/assets/Pikachu.png" );
+	//var pikamaterial = new THREE.MeshBasicMaterial({ map: pikatexture });
+	//pikamaterial.map = pikatexture;
+	var pikamaterial = loadTexture("/static/assets/Pikachu.png" );
+	pikaplane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), pikamaterial);
+	pikaplane.material.side = THREE.DoubleSide;
+	pikaplane.position.z = 3;
+	scene.add(pikaplane);
+
+	// PLS REMOVE THE CUBE
     var geometry = new THREE.BoxGeometry( 1, 1, 1 ); 
     var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } ); 
     cube = new THREE.Mesh( geometry, material ); 
-    scene.add( cube ); 
+    //scene.add( cube ); 
     camera.position.z = 5;
 
     render();
@@ -84,7 +92,7 @@ function onWindowResize() {
 function loadTexture( path ) {
 
 	var texture = new THREE.Texture( texture_placeholder );
-	var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, shading:THREE.FlatShading } );
+	var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, shading:THREE.FlatShading, transparent:true } );
 
 	var image = new Image();
 	image.onload = function () {
