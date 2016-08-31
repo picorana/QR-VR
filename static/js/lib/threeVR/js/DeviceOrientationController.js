@@ -11,6 +11,8 @@
  *
 **/
 
+var easing = 0.05;
+
 var DeviceOrientationController = function ( object, domElement ) {
 
 	this.object = object;
@@ -390,7 +392,9 @@ var DeviceOrientationController = function ( object, domElement ) {
 
 	this.updateDeviceMove = function () {
 
+		var targetAlpha;
 		var alpha, beta, gamma, orient;
+		var deltaAlpha;
 
 		var deviceMatrix;
 
@@ -400,6 +404,7 @@ var DeviceOrientationController = function ( object, domElement ) {
 			beta   = THREE.Math.degToRad( this.deviceOrientation.beta  || 0 ); // X'
 			gamma  = THREE.Math.degToRad( this.deviceOrientation.gamma || 0 ); // Y''
 			orient = THREE.Math.degToRad( this.screenOrientation       || 0 ); // O
+
 
 			// only process non-zero 3-axis data
 			if ( alpha !== 0 && beta !== 0 && gamma !== 0) {
@@ -418,8 +423,8 @@ var DeviceOrientationController = function ( object, domElement ) {
 
 				if ( this.freeze ) return;
 
-				//this.object.quaternion.slerp( deviceQuat, 0.07 ); // smoothing
-				this.object.quaternion.copy( deviceQuat );
+				this.object.quaternion.slerp( deviceQuat, 0.07 ); // smoothing
+				//this.object.quaternion.copy( deviceQuat );
 
 			}
 
