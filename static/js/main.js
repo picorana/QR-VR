@@ -1,35 +1,27 @@
-var camera, scene, renderer, controls, cube, texture_placeholder, container, pikaplane;
-
-
-function tilt(data){
-	document.getElementById("thing").innerHTML = "alpha: " + data[0] + " beta: " + data[1] + " gamma: " + data[2];
-}
-
-
-if (window.DeviceOrientationEvent) {
-    window.addEventListener("deviceorientation", function () {
-        tilt([event.alpha, event.beta, event.gamma]);
-    }, true);
-} else if (window.DeviceMotionEvent) {
-    window.addEventListener('devicemotion', function () {
-        tilt([event.acceleration.x * 2, event.acceleration.y * 2]);
-    }, true);
-} else {
-    window.addEventListener("MozOrientation", function () {
-        tilt([orientation.x * 50, orientation.y * 50]);
-    }, true);
-}
+var camera, scene, renderer, controls, cube, texture_placeholder, container, creatureplane;
 
 function render() { 
     requestAnimationFrame( render );
     controls.update(); 
-    cube.rotation.x += 0.1; 
-    cube.rotation.y += 0.1;
     renderer.render( scene, camera ); 
 } 
 
 function init(){
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
+	$.getJSON( "/static/json/locations.json", function( json, status ) { 
+		//console.log(json.locations[0]);
+		initScene(json.locations[1]);
+	})
+  		.done(function() { 
+  			console.log( "second success" ); 
+  			render();
+  		})
+  		.fail(function(jqXHR, textStatus, errorThrown) { console.log('getJSON request failed! ' + textStatus); })
+  		.always(function() { console.log( "complete" );});
+}
+
+function initScene(location_json){
+	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
+	camera.position.z = 5;
     scene = new THREE.Scene();
 
     container = document.getElementById( 'container' );
@@ -48,39 +40,21 @@ function init(){
 
     controls = new DeviceOrientationController( camera, renderer.domElement );
     controls.connect();
-    //setupControllerEventHandlers( controls );
     window.addEventListener( 'resize', onWindowResize, false );
 
-    //CREATE SKYBOX
-    var materials = [
-		loadTexture( '/static/assets/skybox/skybox_pz.jpg' ), // right
-		loadTexture( '/static/assets/skybox/skybox_px.jpg' ), // left
-		loadTexture( '/static/assets/skybox/skybox_py.jpg' ), // top
-		loadTexture( '/static/assets/skybox/skybox_ny.jpg' ), // bottom
-		loadTexture( '/static/assets/skybox/skybox_nz.jpg' ), // back
-		loadTexture( '/static/assets/skybox/skybox_nx.jpg' )  // front
-	];
-	var mesh = new THREE.Mesh( new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7 ), new THREE.MultiMaterial( materials ) );
-	mesh.scale.x = - 1;
-	scene.add( mesh );
+    var skyboxmaterials = [];
+    for (var path of location_json.map.skybox){ skyboxmaterials.push(loadTexture(path)); }
+	var skyboxmesh = new THREE.Mesh( 
+		new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7 ), 
+		new THREE.MultiMaterial( skyboxmaterials ) );
+	skyboxmesh.scale.x = - 1;
+	scene.add( skyboxmesh );
 
-	//var pikatexture = THREE.TextureLoader( "/static/assets/Pikachu.png" );
-	//var pikamaterial = new THREE.MeshBasicMaterial({ map: pikatexture });
-	//pikamaterial.map = pikatexture;
-	var pikamaterial = loadTexture("/static/assets/Pikachu.png" );
-	pikaplane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), pikamaterial);
-	pikaplane.material.side = THREE.DoubleSide;
-	pikaplane.position.z = 3;
-	scene.add(pikaplane);
-
-	// PLS REMOVE THE CUBE
-    var geometry = new THREE.BoxGeometry( 1, 1, 1 ); 
-    var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } ); 
-    cube = new THREE.Mesh( geometry, material ); 
-    //scene.add( cube ); 
-    camera.position.z = 5;
-
-    render();
+	var creaturematerial = loadTexture( location_json.creature.texture );
+	creatureplane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), creaturematerial);
+	creatureplane.material.side = THREE.DoubleSide;
+	creatureplane.position = location_json.creature.position;
+	scene.add(creatureplane);
 }
 
 function onWindowResize() {
@@ -107,7 +81,6 @@ function loadTexture( path ) {
 
 }
 
-
-
-
 init();
+
+
