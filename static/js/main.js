@@ -28,12 +28,6 @@ function initScene(location_json){
 	raycaster = new THREE.Raycaster();
 	mouse = new THREE.Vector2();
 
-	//document.addEventListener( 'mouseup', onDocumentMouseUp, false );
-	//document.addEventListener( 'touchend', onDocumentTouchEnd, false );
-	
-	//document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-	//document.addEventListener( 'touchend', onDocumentTouchStart, false );
-
 	camera.position.z = 2;
     
     container = document.getElementById( 'container' );
