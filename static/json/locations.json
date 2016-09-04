@@ -14,7 +14,7 @@
     		"creature": {
     				"name":"Pikachu",
     				"texture":"/static/assets/Pikachu.png",
-    				"position":[0, 0, 3]
+    				"position":[0, 0, 0]
     			}
     	},
     	{

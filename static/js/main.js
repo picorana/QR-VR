@@ -10,7 +10,7 @@ function render() {
 
 function init(){
 	// i map_id possibili sono 0 e 1 per ora
-	var map_id = getParameterByName("mapid");
+	var map_id = getParameterByName("map_id");
 
 	$.getJSON( "/static/json/locations.json", function( json, status ) { 
 		initScene(json.locations[map_id]);
@@ -50,20 +50,27 @@ function initScene(location_json){
     controls.connect();
     window.addEventListener( 'resize', onWindowResize, false );
 
-    var skyboxmaterials = [];
-    for (var path of location_json.map.skybox){ skyboxmaterials.push(loadTexture(path)); }
+    buildSkybox(location_json.map.skybox);
+
+	var creaturematerial = loadTexture( location_json.creature.texture );
+	creatureplane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), creaturematerial);
+	creatureplane.material.side = THREE.DoubleSide;
+	creatureplane.position.x = location_json.creature.position[0];
+	creatureplane.position.y = location_json.creature.position[1];
+	creatureplane.position.z = location_json.creature.position[2];
+	console.log(creatureplane.position);
+	scene.add(creatureplane);
+	objects.push(creatureplane);
+}
+
+function buildSkybox(skyboxTextureArray){
+	var skyboxmaterials = [];
+    for (var path of skyboxTextureArray){ skyboxmaterials.push(loadTexture(path)); }
 	var skyboxmesh = new THREE.Mesh( 
 		new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7 ), 
 		new THREE.MultiMaterial( skyboxmaterials ) );
 	skyboxmesh.scale.x = - 1;
 	scene.add( skyboxmesh );
-
-	var creaturematerial = loadTexture( location_json.creature.texture );
-	creatureplane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), creaturematerial);
-	creatureplane.material.side = THREE.DoubleSide;
-	creatureplane.position = location_json.creature.position;
-	scene.add(creatureplane);
-	objects.push(creatureplane);
 }
 
 function checkTouchIntersection(event){
@@ -120,8 +127,8 @@ function getParameterByName(name, url) {
     name = name.replace(/[\[\]]/g, "\\$&");
     var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
         results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
+    if (!results) return 0;
+    if (!results[2]) return 0;
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
