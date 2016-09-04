@@ -12,6 +12,7 @@
 **/
 
 var easing = 0.05;
+var info = document.getElementById('info');
 
 var DeviceOrientationController = function ( object, domElement ) {
 
@@ -134,6 +135,7 @@ var DeviceOrientationController = function ( object, domElement ) {
 		this.element.removeEventListener( 'mousemove', this.onDocumentMouseMove, false );
 		this.element.removeEventListener( 'mouseup', this.onDocumentMouseUp, false );
 
+		checkClickIntersection(event);
 		appState = CONTROLLER_STATE.AUTO;
 
 		this.freeze = false;
@@ -145,6 +147,8 @@ var DeviceOrientationController = function ( object, domElement ) {
 	this.onDocumentTouchStart = function ( event ) {
 		event.preventDefault();
 		event.stopPropagation();
+
+		checkTouchIntersection(event);
 
 		switch ( event.touches.length ) {
 			case 1: // ROTATE

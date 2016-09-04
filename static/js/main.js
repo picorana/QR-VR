@@ -1,4 +1,6 @@
 var camera, scene, renderer, controls, cube, texture_placeholder, container, creatureplane;
+var raycaster, mouse, info;
+var objects = [];
 
 function render() { 
     requestAnimationFrame( render );
@@ -7,27 +9,39 @@ function render() {
 } 
 
 function init(){
+	// i map_id possibili sono 0 e 1 per ora
+	var map_id = getParameterByName("mapid");
+
 	$.getJSON( "/static/json/locations.json", function( json, status ) { 
-		//console.log(json.locations[0]);
-		initScene(json.locations[1]);
+		initScene(json.locations[map_id]);
 	})
-  		.done(function() { 
-  			console.log( "second success" ); 
-  			render();
-  		})
-  		.fail(function(jqXHR, textStatus, errorThrown) { console.log('getJSON request failed! ' + textStatus); })
-  		.always(function() { console.log( "complete" );});
+  	.done(function() { 
+  		render();
+  	})
+  	.fail(function(jqXHR, textStatus, errorThrown) { console.log('getJSON request failed! ' + textStatus); })
+  	.always(function() { console.log( "complete" );});
 }
 
 function initScene(location_json){
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
-	camera.position.z = 5;
-    scene = new THREE.Scene();
+	scene = new THREE.Scene();
+	raycaster = new THREE.Raycaster();
+	mouse = new THREE.Vector2();
 
+	//document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+	//document.addEventListener( 'touchend', onDocumentTouchEnd, false );
+	
+	//document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+	//document.addEventListener( 'touchend', onDocumentTouchStart, false );
+
+	camera.position.z = 2;
+    
     container = document.getElementById( 'container' );
     texture_placeholder = document.createElement( 'canvas' );
 	texture_placeholder.width = 128;
 	texture_placeholder.height = 128;
+
+	info = document.getElementById('info');
 	
 	var context = texture_placeholder.getContext( '2d' );
 	context.fillStyle = 'rgb( 200, 200, 200 )';
@@ -55,6 +69,33 @@ function initScene(location_json){
 	creatureplane.material.side = THREE.DoubleSide;
 	creatureplane.position = location_json.creature.position;
 	scene.add(creatureplane);
+	objects.push(creatureplane);
+}
+
+function checkTouchIntersection(event){
+	mouse.x = (event.touches[0].clientX / renderer.domElement.clientWidth) * 2 - 1;
+	mouse.y = - (event.touches[0].clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+	raycaster.setFromCamera( mouse, camera );
+
+	var intersects = raycaster.intersectObjects( objects );
+
+	if ( intersects.length > 0 ) {
+		info.innerHTML = info.innerHTML + '<br>clicked!';
+	}
+}
+
+function checkClickIntersection(event){
+	mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+	mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+	raycaster.setFromCamera( mouse, camera );
+
+	var intersects = raycaster.intersectObjects( objects );
+
+	if ( intersects.length > 0 ) {
+		info.innerHTML = info.innerHTML + '<br>clicked!';
+	}
 }
 
 function onWindowResize() {
@@ -78,7 +119,16 @@ function loadTexture( path ) {
 	image.src = path;
 
 	return material;
+}
 
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
 init();
