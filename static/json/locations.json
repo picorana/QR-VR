@@ -1,22 +1,27 @@
 {
 	"locations":[
-    	{
-    		"map": {
-    			"skybox":[
-    				"/static/assets/skybox/skybox_pz.jpg",
-    				"/static/assets/skybox/skybox_px.jpg",
-    				"/static/assets/skybox/skybox_py.jpg",
-    				"/static/assets/skybox/skybox_ny.jpg",
-    				"/static/assets/skybox/skybox_nz.jpg",
-    				"/static/assets/skybox/skybox_nx.jpg"
-    			]
-    		},
-    		"creature": {
-    				"name":"Pikachu",
-    				"texture":"/static/assets/Pikachu.png",
-    				"position":[0, 0, 0]
-    			}
-    	},
+		{
+	    	"map": {
+	    		"skybox":[
+	    			"/static/assets/skybox/skybox_pz.jpg",
+	    			"/static/assets/skybox/skybox_px.jpg",
+	    			"/static/assets/skybox/skybox_py.jpg",
+	    			"/static/assets/skybox/skybox_ny.jpg",
+	    			"/static/assets/skybox/skybox_nz.jpg",
+	    			"/static/assets/skybox/skybox_nx.jpg"
+	    		]
+	    	},
+	    	
+		    "creatures":[ 
+		    	{
+		    		"name":"Pikachu",
+		    		"texture":"/static/assets/Pikachu.png",
+		    		"position":[0, 0, -2]
+		    		}
+		    	]
+	    	
+	    },
+    	
     	{
     		"map": {
     			"skybox":[
@@ -28,11 +33,13 @@
     				"/static/assets/skybox/backmoon.jpg"
     			]
     		},
-    		"creature": {
-    				"name":"Pikachu",
+    		"creatures": [
+    			{
+    				"name":"Jigglypuff",
     				"texture":"/static/assets/Jigglypuff.png",
     				"position":[0, 1, 0]
     			}
+    		]
     	}
 	]
 }

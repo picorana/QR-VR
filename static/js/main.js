@@ -1,5 +1,6 @@
 var camera, scene, renderer, controls, cube, texture_placeholder, container, creatureplane;
 var raycaster, mouse, info;
+var particle, particleMaterial;
 var objects = [];
 
 function render() { 
@@ -27,8 +28,6 @@ function initScene(location_json){
 	scene = new THREE.Scene();
 	raycaster = new THREE.Raycaster();
 	mouse = new THREE.Vector2();
-
-	camera.position.z = 2;
     
     container = document.getElementById( 'container' );
     texture_placeholder = document.createElement( 'canvas' );
@@ -50,27 +49,50 @@ function initScene(location_json){
     controls.connect();
     window.addEventListener( 'resize', onWindowResize, false );
 
-    buildSkybox(location_json.map.skybox);
+    particleMaterial = new THREE.SpriteCanvasMaterial( {
 
-	var creaturematerial = loadTexture( location_json.creature.texture );
-	creatureplane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), creaturematerial);
-	creatureplane.material.side = THREE.DoubleSide;
-	creatureplane.position.x = location_json.creature.position[0];
-	creatureplane.position.y = location_json.creature.position[1];
-	creatureplane.position.z = location_json.creature.position[2];
-	console.log(creatureplane.position);
-	scene.add(creatureplane);
-	objects.push(creatureplane);
+					color: 0x000000,
+					program: function ( context ) {
+
+						context.beginPath();
+						context.arc( 0, 0, 0.5, 0, PI2, true );
+						context.fill();
+
+					}
+
+				} );
+
+    buildSkybox(location_json.map.skybox);
+    buildCreatures(location_json.creatures);
+
+	
 }
 
 function buildSkybox(skyboxTextureArray){
 	var skyboxmaterials = [];
     for (var path of skyboxTextureArray){ skyboxmaterials.push(loadTexture(path)); }
 	var skyboxmesh = new THREE.Mesh( 
-		new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7 ), 
+		new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7), 
 		new THREE.MultiMaterial( skyboxmaterials ) );
 	skyboxmesh.scale.x = - 1;
 	scene.add( skyboxmesh );
+}
+
+function buildCreatures(creatureArray){
+	var id = 0;
+	for (var creature of creatureArray){
+		var creaturematerial = loadTexture( creature.texture );
+		creatureplane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), creaturematerial);
+		creatureplane.material.side = THREE.DoubleSide;
+		creatureplane.position.x = creature.position[0];
+		creatureplane.position.y = creature.position[1];
+		creatureplane.position.z = creature.position[2];
+		creatureplane.lookAt( camera.position );
+		creatureplane.frustumCulled = false;
+		creatureplane.name = "creature" + id++;
+		scene.add(creatureplane);
+		objects.push(creatureplane);
+	}
 }
 
 function checkTouchIntersection(event){
@@ -83,6 +105,7 @@ function checkTouchIntersection(event){
 
 	if ( intersects.length > 0 ) {
 		info.innerHTML = info.innerHTML + '<br>clicked!';
+		catchCreature(intersects[0]);
 	}
 }
 
@@ -96,7 +119,21 @@ function checkClickIntersection(event){
 
 	if ( intersects.length > 0 ) {
 		info.innerHTML = info.innerHTML + '<br>clicked!';
+		catchCreature(intersects[0]);
 	}
+}
+
+function catchCreature(clickedElement){
+	console.log(objects.indexOf(clickedElement.object));
+	delete objects[objects.indexOf(clickedElement.object)];
+	clickedElement.object.material.color.setHex( Math.random() * 0xffffff );
+
+	var particle = new THREE.Sprite( particleMaterial );
+	particle.position.copy(clickedElement.point);
+	particle.scale.x = particle.scale.y = 16;
+	scene.add( particle );
+
+	scene.remove(clickedElement.object);
 }
 
 function onWindowResize() {
