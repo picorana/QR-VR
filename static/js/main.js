@@ -1,15 +1,30 @@
 var camera, scene, renderer, controls, cube, texture_placeholder, container, creatureplane;
 var raycaster, mouse, info;
-var particle, particleMaterial;
 var objects = [];
+
+var is_webgl_enabled;
+
+var filterStrength = 20;
+var frameTime = 0, lastLoop, thisLoop, fpsOut;
 
 function render() { 
     requestAnimationFrame( render );
     controls.update(); 
     renderer.render( scene, camera ); 
+
+    var thisFrameTime = (thisLoop=new Date) - lastLoop;
+	frameTime+= (thisFrameTime - frameTime) / filterStrength;
+	lastLoop = thisLoop;
 } 
 
 function init(){
+
+	fpsOut = document.getElementById('fps');
+	lastLoop = new Date;
+	setInterval(function(){
+	  fpsOut.innerHTML = (1000/frameTime).toFixed(1) + " fps";
+	},1000);
+
 	// i map_id possibili sono 0 e 1 per ora
 	var map_id = getParameterByName("map_id");
 
@@ -24,24 +39,31 @@ function init(){
 }
 
 function initScene(location_json){
+
+	is_webgl_enabled = Detector.webgl? true : false;
+
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
 	scene = new THREE.Scene();
 	raycaster = new THREE.Raycaster();
 	mouse = new THREE.Vector2();
     
     container = document.getElementById( 'container' );
-    texture_placeholder = document.createElement( 'canvas' );
-	texture_placeholder.width = 128;
-	texture_placeholder.height = 128;
+    if (is_webgl_enabled) texture_placeholder = document.createElement( 'canvas' );
+    else texture_placeholder = document.createElement( 'div' );
+	texture_placeholder.width = 32;
+	texture_placeholder.height = 32;
 
 	info = document.getElementById('info');
+	info.innerHTML += "<br>webgl: " + is_webgl_enabled;
 	
-	var context = texture_placeholder.getContext( '2d' );
-	context.fillStyle = 'rgb( 200, 200, 200 )';
-	context.fillRect( 0, 0, texture_placeholder.width, texture_placeholder.height );
+	if (is_webgl_enabled){
+		var context = texture_placeholder.getContext( '2d' );
+		context.fillStyle = 'rgb( 200, 200, 200 )';
+		context.fillRect( 0, 0, texture_placeholder.width, texture_placeholder.height );
+	}
 
-    //renderer = new THREE.WebGLRenderer();
-    renderer = new THREE.CanvasRenderer();
+    renderer = is_webgl_enabled? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
+    //renderer = new THREE.CSS3DRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
     container.appendChild(renderer.domElement);
 
@@ -49,23 +71,12 @@ function initScene(location_json){
     controls.connect();
     window.addEventListener( 'resize', onWindowResize, false );
 
-    particleMaterial = new THREE.SpriteCanvasMaterial( {
-
-					color: 0x000000,
-					program: function ( context ) {
-
-						context.beginPath();
-						context.arc( 0, 0, 0.5, 0, PI2, true );
-						context.fill();
-
-					}
-
-				} );
-
     buildSkybox(location_json.map.skybox);
     buildCreatures(location_json.creatures);
 
-	
+    //var light = new THREE.AmbientLight( 0xffffff );
+	//scene.add(light);
+
 }
 
 function buildSkybox(skyboxTextureArray){
@@ -128,11 +139,6 @@ function catchCreature(clickedElement){
 	delete objects[objects.indexOf(clickedElement.object)];
 	clickedElement.object.material.color.setHex( Math.random() * 0xffffff );
 
-	var particle = new THREE.Sprite( particleMaterial );
-	particle.position.copy(clickedElement.point);
-	particle.scale.x = particle.scale.y = 16;
-	scene.add( particle );
-
 	scene.remove(clickedElement.object);
 }
 
@@ -145,7 +151,8 @@ function onWindowResize() {
 function loadTexture( path ) {
 
 	var texture = new THREE.Texture( texture_placeholder );
-	var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, shading:THREE.FlatShading, transparent:true } );
+	//var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, shading:THREE.FlatShading, transparent:true } );
+	var material = new THREE.MeshBasicMaterial( { map: texture} );
 
 	var image = new Image();
 	image.onload = function () {
