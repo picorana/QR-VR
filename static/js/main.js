@@ -1,6 +1,6 @@
 var camera, scene, renderer, controls, cube, texture_placeholder, container, creatureplane;
 var raycaster, mouse, info;
-var objects = [];
+var objects = [], caught = new Set();
 
 var is_webgl_enabled;
 
@@ -12,6 +12,7 @@ function render() {
     controls.update(); 
     renderer.render( scene, camera ); 
 
+    // fps display text update
     var thisFrameTime = (thisLoop=new Date) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
 	lastLoop = thisLoop;
@@ -19,6 +20,7 @@ function render() {
 
 function init(){
 
+	// fps display text setup
 	fpsOut = document.getElementById('fps');
 	lastLoop = new Date;
 	setInterval(function(){
@@ -28,6 +30,7 @@ function init(){
 	// i map_id possibili sono 0 e 1 per ora
 	var map_id = getParameterByName("map_id");
 
+	// load data from json file "locations.json"
 	$.getJSON( "/static/json/locations.json", function( json, status ) { 
 		initScene(json.locations[map_id]);
 	})
@@ -63,7 +66,7 @@ function initScene(location_json){
 	}
 
     renderer = is_webgl_enabled? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
-    //renderer = new THREE.CSS3DRenderer();
+    //renderer = new THREE.CanvasRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
     container.appendChild(renderer.domElement);
 
@@ -93,6 +96,7 @@ function buildCreatures(creatureArray){
 	var id = 0;
 	for (var creature of creatureArray){
 		var creaturematerial = loadTexture( creature.texture );
+		creaturematerial.transparent = true;
 		creatureplane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), creaturematerial);
 		creatureplane.material.side = THREE.DoubleSide;
 		creatureplane.position.x = creature.position[0];
@@ -102,6 +106,8 @@ function buildCreatures(creatureArray){
 		creatureplane.frustumCulled = false;
 		creatureplane.name = "creature" + id++;
 		scene.add(creatureplane);
+		
+
 		objects.push(creatureplane);
 	}
 }
@@ -115,7 +121,6 @@ function checkTouchIntersection(event){
 	var intersects = raycaster.intersectObjects( objects );
 
 	if ( intersects.length > 0 ) {
-		info.innerHTML = info.innerHTML + '<br>clicked!';
 		catchCreature(intersects[0]);
 	}
 }
@@ -129,17 +134,19 @@ function checkClickIntersection(event){
 	var intersects = raycaster.intersectObjects( objects );
 
 	if ( intersects.length > 0 ) {
-		info.innerHTML = info.innerHTML + '<br>clicked!';
 		catchCreature(intersects[0]);
 	}
 }
 
 function catchCreature(clickedElement){
-	console.log(objects.indexOf(clickedElement.object));
-	delete objects[objects.indexOf(clickedElement.object)];
-	clickedElement.object.material.color.setHex( Math.random() * 0xffffff );
+	if (!caught.has(objects.indexOf(clickedElement.object))){
+		info.innerHTML = info.innerHTML + '<br>clicked! id=' + objects.indexOf(clickedElement.object);
+		//delete objects[objects.indexOf(clickedElement.object)];
 
-	scene.remove(clickedElement.object);
+		scene.remove(clickedElement.object);
+		caught.add(objects.indexOf(clickedElement.object));
+	}
+	
 }
 
 function onWindowResize() {
@@ -151,8 +158,8 @@ function onWindowResize() {
 function loadTexture( path ) {
 
 	var texture = new THREE.Texture( texture_placeholder );
-	//var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, shading:THREE.FlatShading, transparent:true } );
-	var material = new THREE.MeshBasicMaterial( { map: texture} );
+	var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, shading:THREE.FlatShading, transparent:false } );
+	//var material = new THREE.MeshBasicMaterial( { map: texture} );
 
 	var image = new Image();
 	image.onload = function () {
