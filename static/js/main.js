@@ -4,6 +4,7 @@ var objects = [];
 var caught = new Set();
 
 var is_webgl_enabled;
+var canHandleOrientation;
 
 var filterStrength = 20;
 var frameTime = 0, lastLoop, thisLoop, fpsOut;
@@ -19,6 +20,7 @@ function render() {
 	lastLoop = thisLoop;
 } 
 
+// NOT device specific init
 function init(){
 
 	// fps display text setup
@@ -28,12 +30,23 @@ function init(){
 	  fpsOut.innerHTML = (1000/frameTime).toFixed(1) + " fps";
 	},1000);
 
+	info = document.getElementById('info');
+	info.innerHTML += "<br>webgl: " + is_webgl_enabled;
+
+	window.addEventListener( 'orientationchange', onScreenOrientationChange, false );
+  	window.addEventListener( "deviceorientation", handleOrientation, false );
+
 	// i map_id possibili sono 0 e 1 per ora
 	var map_id = getParameterByName("map_id");
 
+	if (!canHandleOrientation) {
+		deviceNotSupported();
+		return;
+	}
+
 	// load data from json file "locations.json"
 	$.getJSON( "/static/json/locations.json", function( json, status ) { 
-		initScene(json.locations[map_id]);
+		initScene(json.locations[map_id]);	
 	})
   	.done(function() { 
   		render();
@@ -41,9 +54,10 @@ function init(){
   	.fail(function(jqXHR, textStatus, errorThrown) { console.log('getJSON request failed! ' + textStatus); })
   	.always(function() { console.log( "complete" );});
 
-  	window.addEventListener( 'orientationchange', onScreenOrientationChange, false );
+
 }
 
+// context specific init
 function initScene(location_json){
 
 	is_webgl_enabled = Detector.webgl? true : false;
@@ -57,9 +71,6 @@ function initScene(location_json){
     texture_placeholder = document.createElement( 'canvas' );
 	texture_placeholder.width = 32;
 	texture_placeholder.height = 32;
-
-	info = document.getElementById('info');
-	info.innerHTML += "<br>webgl: " + is_webgl_enabled;
 	
 	if (is_webgl_enabled){
 		var context = texture_placeholder.getContext( '2d' );
@@ -195,6 +206,14 @@ function getParameterByName(name, url) {
     if (!results) return 0;
     if (!results[2]) return 0;
     return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+function deviceNotSupported( event ){
+	info.innerHTML = "DEVICE NOT SUPPORTED!";
+}
+
+function handleOrientation ( event ){
+	canHandleOrientation = event;
 }
 
 init();
