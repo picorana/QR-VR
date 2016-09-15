@@ -1,6 +1,7 @@
 var camera, scene, renderer, controls, cube, texture_placeholder, container, creatureplane;
 var raycaster, mouse, info;
-var objects = [], caught = new Set();
+var objects = []; 
+var caught = new Set();
 
 var is_webgl_enabled;
 
@@ -39,6 +40,8 @@ function init(){
   	})
   	.fail(function(jqXHR, textStatus, errorThrown) { console.log('getJSON request failed! ' + textStatus); })
   	.always(function() { console.log( "complete" );});
+
+  	window.addEventListener( 'orientationchange', onScreenOrientationChange, false );
 }
 
 function initScene(location_json){
@@ -51,8 +54,7 @@ function initScene(location_json){
 	mouse = new THREE.Vector2();
     
     container = document.getElementById( 'container' );
-    if (is_webgl_enabled) texture_placeholder = document.createElement( 'canvas' );
-    else texture_placeholder = document.createElement( 'div' );
+    texture_placeholder = document.createElement( 'canvas' );
 	texture_placeholder.width = 32;
 	texture_placeholder.height = 32;
 
@@ -66,6 +68,7 @@ function initScene(location_json){
 	}
 
     renderer = is_webgl_enabled? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
+    //renderer = new THREE.SoftwareRenderer();
     //renderer = new THREE.CanvasRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
     container.appendChild(renderer.domElement);
@@ -84,7 +87,11 @@ function initScene(location_json){
 
 function buildSkybox(skyboxTextureArray){
 	var skyboxmaterials = [];
-    for (var path of skyboxTextureArray){ skyboxmaterials.push(loadTexture(path)); }
+    for (var path of skyboxTextureArray){ 
+    	var tmpmaterial = loadTexture(path);
+    	tmpmaterial.transparent = false;
+    	skyboxmaterials.push(tmpmaterial); 
+    }
 	var skyboxmesh = new THREE.Mesh( 
 		new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7), 
 		new THREE.MultiMaterial( skyboxmaterials ) );
@@ -96,7 +103,6 @@ function buildCreatures(creatureArray){
 	var id = 0;
 	for (var creature of creatureArray){
 		var creaturematerial = loadTexture( creature.texture );
-		creaturematerial.transparent = true;
 		creatureplane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), creaturematerial);
 		creatureplane.material.side = THREE.DoubleSide;
 		creatureplane.position.x = creature.position[0];
@@ -106,7 +112,6 @@ function buildCreatures(creatureArray){
 		creatureplane.frustumCulled = false;
 		creatureplane.name = "creature" + id++;
 		scene.add(creatureplane);
-		
 
 		objects.push(creatureplane);
 	}
@@ -141,7 +146,6 @@ function checkClickIntersection(event){
 function catchCreature(clickedElement){
 	if (!caught.has(objects.indexOf(clickedElement.object))){
 		info.innerHTML = info.innerHTML + '<br>clicked! id=' + objects.indexOf(clickedElement.object);
-		//delete objects[objects.indexOf(clickedElement.object)];
 
 		scene.remove(clickedElement.object);
 		caught.add(objects.indexOf(clickedElement.object));
@@ -155,11 +159,21 @@ function onWindowResize() {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
+// reset canvas on screen orientation change
+function onScreenOrientationChange(event){
+	controls.disconnect();
+	if (window.innerWidth > window.innerHeight) camera = new THREE.PerspectiveCamera( 75, window.innerHeight / window.innerWidth, 1, 1100 );
+	else camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1100 );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	controls = new DeviceOrientationController( camera, renderer.domElement );
+	controls.connect();
+	info.innerHTML += "<br>rotation"; 
+}
+
 function loadTexture( path ) {
 
 	var texture = new THREE.Texture( texture_placeholder );
-	var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, shading:THREE.FlatShading, transparent:false } );
-	//var material = new THREE.MeshBasicMaterial( { map: texture} );
+	var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, shading:THREE.FlatShading, transparent:true } );
 
 	var image = new Image();
 	image.onload = function () {
