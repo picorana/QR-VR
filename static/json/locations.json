@@ -40,6 +40,19 @@
     				"position":[0, 1, 0]
     			}
     		]
+    	},
+	{
+    		"map": {
+    			"skybox":[
+    				"/static/assets/iss_skybox/04.png", 
+    				"/static/assets/iss_skybox/02.png", 
+    				"/static/assets/iss_skybox/05.png",
+    				"/static/assets/iss_skybox/06.png",
+    				"/static/assets/iss_skybox/03.png",
+    				"/static/assets/iss_skybox/01.png"
+    			]
+    		},
+    		"creatures": []
     	}
 	]
 }
