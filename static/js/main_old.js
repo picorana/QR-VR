@@ -16,6 +16,8 @@ var chosen_renderer = "webgl";
 var filterStrength = 20;
 var frameTime = 0, lastLoop, thisLoop, fpsOut;
 
+	var clock = new THREE.Clock();
+
 function render() { 
     requestAnimationFrame( render );
     controls.update(); 
@@ -32,7 +34,8 @@ function render() {
 	cube2.position.z = vector.z;*/
 	
 	//videoTexture.update();
-	mixer.update();
+	var delta = 0.75 * clock.getDelta();
+	mixer.update(delta);
 
     // fps display text update
     var thisFrameTime = (thisLoop=new Date) - lastLoop;
@@ -101,7 +104,7 @@ function initScene(location_json){
 	mixer = new THREE.AnimationMixer( scene );
 
 	var loader = new THREE.ObjectLoader();
-	loader.load("../static/assets/testMeshB.json",function ( obj ) {
+	loader.load("../static/assets/testMeshC.json",function ( obj ) {
 		var sceneAnimationClip = obj.animations[0];
 		obj.position.z = -5;
 		obj.position.y = 3;
