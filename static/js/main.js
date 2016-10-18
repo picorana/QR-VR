@@ -9,30 +9,45 @@ function init(){
 	//  	fpsOut.innerHTML = (1000/frameTime).toFixed(1) + " fps"; 
 	//	},1000);
 
-	// do we have webgl?
-	is_webgl_enabled = Detector.webgl? true : false;
-	
-	info = document.getElementById('info');
+	// understand on what device you are
+	var is_webgl_enabled = Detector.webgl? true : false;
+	var can_handle_orientation = handleOrientation();
+	var is_mobile = isMobile();
+	var browser = detect_browser();
+
+  	info = document.getElementById('info');
+  	info.innerHTML += 
+		"webgl: " + is_webgl_enabled +
+		"<br> browser: " + browser +
+		(is_mobile? " mobile" : " desktop") +
+		" " + navigator.platform;
+
+	if (can_handle_orientation===undefined){
+		deviceNotSupported();
+		return;
+	}
 
 	window.addEventListener( 'orientationchange', onScreenOrientationChange, false );
   	window.addEventListener( 'deviceorientation', handleOrientation, false );
   	window.addEventListener( 'resize', onWindowResize, false );
-
-  	info.innerHTML += "webgl: " + is_webgl_enabled
-		+ "<br> browser: " + detect_browser() 
-		+ (isMobile()? " mobile" : " desktop") 
-		+ " " + navigator.platform;
 
 	canvas_placeholder = document.createElement( 'canvas' );
 	var context = canvas_placeholder.getContext( '2d' );
 	context.fillStyle = 'rgb( 200, 200, 200 )';
 	context.fillRect( 0, 0, canvas_placeholder.width, canvas_placeholder.height );
 
-	renderer = new THREE.WebGLRenderer();
-	container.appendChild(renderer.domElement);
+	// i map_id possibili sono 0 e 1 per ora
+	var map_id = getParameterByName("map_id");
 
-	controls = new DeviceOrientationController( camera, renderer.domElement );
-	controls.connect();
+	// load data from json file "locations.json"
+	$.getJSON( "/static/json/locations.json", function( json, status ) { 
+		//initScene(json.locations[map_id]);	
+	})
+  	.done(function() { 
+  		//render();
+  	})
+  	.fail(function(jqXHR, textStatus, errorThrown) { console.log('getJSON request failed! ' + textStatus); })
+  	.always(function() { console.log( "complete" );});
 }
 
 function onWindowResize() {
@@ -52,8 +67,14 @@ function onScreenOrientationChange(event){
 	info.innerHTML += "<br>rotation"; 
 }
 
-function handleOrientation ( event ){
-	canHandleOrientation = event;
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return 0;
+    if (!results[2]) return 0;
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
 init();

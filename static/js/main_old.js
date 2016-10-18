@@ -24,11 +24,12 @@ function render() {
     // where is the camera looking at?
     var vector = new THREE.Vector3( 0, 0, -10 );
 	vector.applyQuaternion( camera.quaternion );
+	effect.render( scene, camera );
 	//console.log(vector);
-	cube2.position = vector;
+	/*cube2.position = vector;
 	cube2.position.x = vector.x;
 	cube2.position.y = vector.y;
-	cube2.position.z = vector.z;
+	cube2.position.z = vector.z;*/
 	
 	//videoTexture.update();
 	mixer.update();
@@ -95,6 +96,8 @@ function initScene(location_json){
 	raycaster = new THREE.Raycaster();
 	mouse = new THREE.Vector2();
 
+	
+
 	mixer = new THREE.AnimationMixer( scene );
 
 	var loader = new THREE.ObjectLoader();
@@ -120,18 +123,19 @@ function initScene(location_json){
 
 	
 
-	videoTexture= new THREEx.VideoTexture("../static/js/small.mp4");
-	var video	= videoTexture.video;
+	//videoTexture= new THREEx.VideoTexture("../static/js/small.mp4");
+	//var video	= videoTexture.video;
 
-	var geometry2 = new THREE.SphereGeometry( .1);
-	var material2 = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors, overdraw: 0.5, map	: videoTexture.texture } );
-	var material3 = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors, overdraw: 0.5 } );
+	//var geometry2 = new THREE.SphereGeometry( .1);
+	//var material2 = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors, overdraw: 0.5, map	: videoTexture.texture } );
+	//var material3 = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors, overdraw: 0.5 } );
 
 	// TEST PART!!
-	cube2 = new THREE.Mesh( geometry2, material3 );
-	scene.add( cube2 );
+	//cube2 = new THREE.Mesh( geometry2, material3 );
+	//scene.add( cube2 );
+	console.log("blah");
 
-
+	/*
 	var testgeometry = new THREE.PlaneGeometry(1, 1);
 	var testmaterial	= new THREE.MeshBasicMaterial({
 		map	: videoTexture.texture
@@ -139,7 +143,7 @@ function initScene(location_json){
 
 	var testmesh	= new THREE.Mesh( testgeometry, testmaterial );
 	testmesh.position.y=30;
-	scene.add(testmesh);
+	scene.add(testmesh);*/
 
 	// END TEST PART
 
@@ -157,6 +161,8 @@ function initScene(location_json){
 		}
 
 	    renderer = is_webgl_enabled? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
+	    effect = new THREE.StereoEffect(renderer);
+	    effect.setSize( window.innerWidth, window.innerHeight );
 	    //renderer = new THREE.SoftwareRenderer();
 	    //renderer = new THREE.CanvasRenderer();
 	    renderer.setSize( window.innerWidth, window.innerHeight );
