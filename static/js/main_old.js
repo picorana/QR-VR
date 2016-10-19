@@ -2,6 +2,7 @@ var camera, scene, renderer, controls, cube, texture_placeholder, container, cre
 var raycaster, mouse, info;
 var objects = []; 
 var caught = [];
+var clickableObjects = [];
 
 var video;
 var mixer;
@@ -16,7 +17,9 @@ var chosen_renderer = "webgl";
 var filterStrength = 20;
 var frameTime = 0, lastLoop, thisLoop, fpsOut;
 
-	var clock = new THREE.Clock();
+var vr_mode = false;
+
+var clock = new THREE.Clock();
 
 function render() { 
     requestAnimationFrame( render );
@@ -26,8 +29,9 @@ function render() {
     // where is the camera looking at?
     var vector = new THREE.Vector3( 0, 0, -10 );
 	vector.applyQuaternion( camera.quaternion );
-	effect.render( scene, camera );
-	//console.log(vector);
+	
+	if (vr_mode) effect.render( scene, camera );
+
 	/*cube2.position = vector;
 	cube2.position.x = vector.x;
 	cube2.position.y = vector.y;
@@ -45,6 +49,9 @@ function render() {
 
 // context independent init
 function init(){
+
+	var gui = new dat.GUI();
+	gui.add(this, 'vr_mode');
 
 	// fps display text setup
 	fpsOut = document.getElementById('fps');
