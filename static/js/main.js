@@ -4,7 +4,9 @@ var updateFcts	= [];
 var ring_texture_array = [];
 
 var ringIndex = 0;
-var videoTexture;
+var mixer, action1, sceneAnimationClip1;
+
+var clock = new THREE.Clock();
 
 function init(){
 
@@ -29,7 +31,7 @@ function init(){
 
 	// note: orientationchange = screen rotation, deviceorientation = gyroscope
 	window.addEventListener( 'orientationchange', 	onScreenOrientationChange, 	false );
-  	window.addEventListener( 'deviceorientation', 	handleOrientation, 			false );
+  	//window.addEventListener( 'deviceorientation', 	handleOrientation, 			false );
   	window.addEventListener( 'resize', 				onWindowResize, 			false );
 
 	var map_id = getParameterByName( "map_id" );
@@ -72,10 +74,10 @@ function initScene( location_json ){
 		ring_texture_array.push(texture_loader.load("../static/assets/ring/frame_"+i+"_delay-0.04s.gif"));
 	}
 	texture.needsUpdate = true;
-	var material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-	material.needsUpdate = true;
+	var ring_material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+	ring_material.needsUpdate = true;
 	updateFcts.push(function(delta, now){
-		material.map = ring_texture_array[ringIndex];
+		ring_material.map = ring_texture_array[ringIndex];
 		ringIndex++;
 		if (ringIndex==20) ringIndex=0;
 	});
@@ -89,7 +91,7 @@ function initScene( location_json ){
 	cube.ongazeover = function(){
 		//material.map = texture;
 		reticle.reticle_object.geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
-		reticle.reticle_object.material = material;
+		reticle.reticle_object.material = ring_material;
 	};
 
 	cube.ongazeout = function(){
@@ -97,36 +99,60 @@ function initScene( location_json ){
 	};
 
 	cube.position.z = -5;
+	cube.position.x = 2;
 	scene.add(cube);
 
 	var loader = new THREE.ObjectLoader();
-	loader.load("../static/json/048_MenuMesh01.json",function ( obj ) {
+	loader.load("../static/json/048_MenuMeshChildren.json",function ( obj ) {
 	    obj.rotation.y = Math.PI;
 	    obj.rotation.x = Math.PI/2;
 	    obj.position.z = -4;
-	    videoTexture = new THREEx.VideoTexture("../static/js/small.mp4");
-		var video	= videoTexture.video;
-		updateFcts.push(function(delta, now){
-			videoTexture.update(delta, now);
-		});
-		
-		var testmaterial	= new THREE.MeshBasicMaterial({
-			map	: videoTexture.texture
-		});
-	    obj.children[1].material.emissive = new THREE.Color( 0xffffff );
-	    var testgeometry = new THREE.PlaneGeometry(2, 2);
-	    obj.children[0].material = testmaterial;
-	    obj.children[0].geometry = testgeometry;
-	    reticle.add_collider(obj.children[0]);
-	    //video.play();
-	    obj.children[0].ongazelong = function(){
-		  	video.play();
-		};
-		obj.children[0].ongazeover = function(){
-		};
-		obj.children[0].ongazeout = function(){
-			video.pause();
-		};
+
+	    sceneAnimationClip1 = obj.animations[0];
+
+	    obj.children[0].children.forEach(function (child, i){
+	    	if( !child.name.includes("Content") && !child.name.includes("Panel") ) child.material.wireframe=true;
+	    	if ( child.name.includes("Content") ){
+	    		var videoTexture;
+	    		if (obj.children.indexOf(child)%2==0){
+	    		  	videoTexture = new THREEx.VideoTexture("../static/assets/big_buck_bunny.webm");
+	    		} else {
+	    			videoTexture = new THREEx.VideoTexture("../static/js/small.mp4");
+	    		}
+				var video	= videoTexture.video;
+				updateFcts.push(function(delta, now){
+					videoTexture.update(delta, now);
+				});
+				var testmaterial	= new THREE.MeshBasicMaterial({
+					map	: videoTexture.texture
+				});
+				var testgeometry = new THREE.PlaneGeometry(2, 2);
+				child.material = testmaterial;
+			    child.geometry = testgeometry;
+			    reticle.add_collider(child);
+			    child.ongazelong = function(){
+				  	video.play();
+				  	reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
+				};
+				child.ongazeover = function(){
+					reticle.reticle_object.geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+					reticle.reticle_object.material = ring_material;
+				};
+				child.ongazeout = function(){
+					video.pause();
+					reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
+				};
+	    	}
+	    	if (child.name.includes("Panel")){
+	    		child.material.emissive = new THREE.Color( 0xffffff );
+	    	}
+	    });
+
+		mixer = new THREE.AnimationMixer( obj );
+	    action1 = mixer.clipAction( sceneAnimationClip1 );
+	    action1.loop=THREE.LoopRepeat;
+	    action1.play();
+
 	    scene.add( obj );
 	    console.log(obj);
 	});
@@ -142,6 +168,9 @@ function render(){
 	reticle.reticle_loop();
 
 	controls.update(); 
+
+	var delta = 0.75 * clock.getDelta();
+	mixer.update(delta);
 
 	var thisFrameTime = (thisLoop = new Date()) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
@@ -172,6 +201,7 @@ function buildSkybox(skyboxTextureArray){
 	var skyboxmesh = new THREE.Mesh( 
 		new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7), 
 		new THREE.MultiMaterial( skyboxmaterials ) );
+	skyboxmesh.name = "skybox";
 	skyboxmesh.scale.x = - 1;
 	scene.add( skyboxmesh );
 
