@@ -4,17 +4,31 @@
 <head>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 	<script src='./static/js/lib/threejs/build/three.js'></script>
-	<script src='./static/js/lib/threejs/examples/js/renderers/CanvasRenderer.js'></script>
 	<script src='./static/js/lib/threejs/examples/js/Detector.js'></script>
+	<script src='./static/js/lib/threejs/examples/js/renderers/SoftwareRenderer.js'></script>
+	<script src='./static/js/lib/threejs/examples/js/renderers/CSS3DRenderer.js'></script>
+	<script src='./static/js/lib/threejs/examples/js/renderers/CanvasRenderer.js'></script>
 	<script src='./static/js/lib/threejs/examples/js/renderers/Projector.js'></script>
+	<script src='./static/js/lib/threex.videotexture.js'></script>
+	<script src='./static/js/lib/threex.dynamictexture.js'></script>
+	<script src='./static/js/lib/StereoEffect.js'></script>
+	<script src='./static/js/lib/VRControls.js'></script>
+	<script src='./static/js/lib/VREffect.js'></script>
+	<script src='./static/js/lib/webvr-manager.js'></script>
+	<script src='./static/js/lib/webvr-polyfill.js'></script>
+	<script src='./static/js/lib/vreticle.js'></script>
+	<script src='./static/js/lib/dat.gui.min.js'></script>
 	<script src='./static/js/lib/threeVR/js/DeviceOrientationController.js'></script>
+
+	
+
 	<style>
 			body {
 				background-color: rgb(100,100,100);
 				margin: 0px;
 				overflow: hidden;
 				font-family: Monospace;
-				font-size: 200%;
+				font-size: 100%;
 			}
 
 			#info {
@@ -23,13 +37,25 @@
 				width: 100%;
 				text-align: center;
 			}
+
+			#fps {
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: left;
+				color: gray;
+			}
 	</style>
 </head>
 
 <body>
 	<div id="container">
-		<span id='info'>click on the creature!</span>
+		<span id='fps'>fps</span>
+		<span id='info'></span>
 	</div>
-	<div id="reader" style="width:300px;height:250px"></div>
-	<script src='../static/js/main.js'></script>
+	
+	<script src='./static/js/device_checks.js'></script>
+	<script src='./static/js/guiobject.js'></script>
+	<script src='./static/js/main.js'></script>
+	
 </body>

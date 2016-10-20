@@ -1,0 +1,115 @@
+{
+    "object": {
+        "type": "Scene",
+        "matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+        "children": [{
+            "name": "Content",
+            "uuid": "FC644A5E-2BE5-3258-A93B-E27F4F495048",
+            "matrix": [-1.26106,0,0,0,0,0,0.678696,0,0,1.06502,0,0,0.484007,-0.057883,0.337253,1],
+            "visible": true,
+            "type": "Mesh",
+            "castShadow": false,
+            "receiveShadow": false,
+            "geometry": "5193F126-B7DF-31CF-9B17-DCEF0D623274"
+        },{
+            "name": "Panel",
+            "uuid": "165EAAF7-3241-333F-BB56-5CDE36C8D187",
+            "matrix": [-1.08,0,0,0,0,0,1.92,0,0,1,0,0,0,0,0,1],
+            "visible": true,
+            "type": "Mesh",
+            "material": "109C8DEC-623D-3F38-8AFD-395BEC6741C8",
+            "castShadow": true,
+            "receiveShadow": true,
+            "geometry": "FDA35051-77AC-3FCF-B642-34C990EA7344"
+        }],
+        "uuid": "10380F69-1FBC-47B2-8E43-9A0D4CD31AA6"
+    },
+    "metadata": {
+        "sourceFile": "048_MenuMesh.blend",
+        "type": "Object",
+        "generator": "io_three",
+        "version": 4.3
+    },
+    "textures": [{
+        "magFilter": 1006,
+        "wrap": [1000,1000],
+        "repeat": [1,1],
+        "image": "42BAAE0A-3644-3969-A4BA-A4BEA75CED1E",
+        "name": "Texture",
+        "mapping": 300,
+        "minFilter": 1008,
+        "anisotropy": 1,
+        "uuid": "57C8C518-0CD0-3866-88FE-BBB14474EBD7"
+    }],
+    "materials": [{
+        "color": 10724259,
+        "emissive": 0,
+        "blending": "NormalBlending",
+        "type": "MeshPhongMaterial",
+        "shininess": 50,
+        "depthTest": true,
+        "name": "Material",
+        "ambient": 10724259,
+        "uuid": "FC9C3C1C-87E7-3748-8148-105003E5F3D5",
+        "vertexColors": false,
+        "specular": 8355711,
+        "depthWrite": true
+    },{
+        "transparent": true,
+        "map": "57C8C518-0CD0-3866-88FE-BBB14474EBD7",
+        "color": 10724259,
+        "emissive": 10724259,
+        "blending": "NormalBlending",
+        "type": "MeshPhongMaterial",
+        "shininess": 50,
+        "depthTest": true,
+        "name": "Material.001",
+        "ambient": 10724259,
+        "uuid": "109C8DEC-623D-3F38-8AFD-395BEC6741C8",
+        "vertexColors": false,
+        "specular": 8355711,
+        "depthWrite": true
+    }],
+    "geometries": [{
+        "type": "Geometry",
+        "data": {
+            "faces": [41,0,1,3,2,0,1,2,3,0,0,0,0],
+            "normals": [0,0,1],
+            "uvs": [[1,0,1,1,0,1,0,0]],
+            "name": "PlaneGeometry",
+            "metadata": {
+                "generator": "io_three",
+                "uvs": 1,
+                "version": 3,
+                "normals": 1,
+                "vertices": 4,
+                "faces": 1
+            },
+            "vertices": [1.77778,-0.5625,0,1.77778,0.5625,0,-1.77778,-0.5625,0,-1.77778,0.5625,0]
+        },
+        "uuid": "FDA35051-77AC-3FCF-B642-34C990EA7344"
+    },{
+        "type": "Geometry",
+        "data": {
+            "faces": [33,0,1,3,2,0,0,0,0],
+            "normals": [0,0,1],
+            "uvs": [],
+            "name": "Plane.001Geometry",
+            "metadata": {
+                "generator": "io_three",
+                "uvs": 0,
+                "version": 3,
+                "normals": 1,
+                "vertices": 4,
+                "faces": 1
+            },
+            "vertices": [-1,-1,0,1,-1,0,-1,1,0,1,1,0]
+        },
+        "uuid": "5193F126-B7DF-31CF-9B17-DCEF0D623274"
+    }],
+    "images": [{
+        "name": "048_MinortyPanelP-000.png",
+        "url": "048_MinortyPanelP-000.png",
+        "uuid": "42BAAE0A-3644-3969-A4BA-A4BEA75CED1E"
+    }]
+}

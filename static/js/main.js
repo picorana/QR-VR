@@ -4,6 +4,7 @@ var updateFcts	= [];
 var ring_texture_array = [];
 
 var ringIndex = 0;
+var videoTexture;
 
 function init(){
 
@@ -35,7 +36,7 @@ function init(){
 	$.getJSON( "/static/json/locations.json", function( json, status ) { 
 		initScene(json.locations[map_id]);	
 	})
-  	.done(	function() 									{ 	render();	})
+  	.done(	function() 									{ 		})
   	.fail(	function(jqXHR, textStatus, errorThrown) 	{ console.log( "getJSON request failed! " + textStatus); })
   	.always(function() 									{ console.log( "complete" );});
 }
@@ -93,18 +94,46 @@ function initScene( location_json ){
 
 	cube.ongazeout = function(){
 		reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
-	  //this.material = reticle.default_material();
-	  //material.map = null;
-	  //reticle.reticle_object.material = material;
-	  //reticle.reticle_object.material = new THREE.MeshNormalMaterial();
-	  //reticle.reticle_object = new THREE.Mesh(new THREE.SphereGeometry(0.05, 0.05, 0.05), new THREE.MeshBasicMaterial());
 	};
 
-	cube.position.z = -1;
+	cube.position.z = -5;
 	scene.add(cube);
+
+	var loader = new THREE.ObjectLoader();
+	loader.load("../static/json/048_MenuMesh01.json",function ( obj ) {
+	    obj.rotation.y = Math.PI;
+	    obj.rotation.x = Math.PI/2;
+	    obj.position.z = -4;
+	    videoTexture = new THREEx.VideoTexture("../static/js/small.mp4");
+		var video	= videoTexture.video;
+		updateFcts.push(function(delta, now){
+			videoTexture.update(delta, now);
+		});
+		
+		var testmaterial	= new THREE.MeshBasicMaterial({
+			map	: videoTexture.texture
+		});
+	    obj.children[1].material.emissive = new THREE.Color( 0xffffff );
+	    var testgeometry = new THREE.PlaneGeometry(2, 2);
+	    obj.children[0].material = testmaterial;
+	    obj.children[0].geometry = testgeometry;
+	    reticle.add_collider(obj.children[0]);
+	    //video.play();
+	    obj.children[0].ongazelong = function(){
+		  	video.play();
+		};
+		obj.children[0].ongazeover = function(){
+		};
+		obj.children[0].ongazeout = function(){
+			video.pause();
+		};
+	    scene.add( obj );
+	    console.log(obj);
+	});
 	// END TEST
 
 	buildSkybox(location_json.map.skybox);
+	render();
 }
 
 function render(){
@@ -117,6 +146,7 @@ function render(){
 	var thisFrameTime = (thisLoop = new Date()) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
 	lastLoop = thisLoop;
+
 
 	updateFcts.forEach(function(updateFn){
 		updateFn(frameTime/1000, thisFrameTime/1000);
