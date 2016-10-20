@@ -1,5 +1,9 @@
 var canvas_placeholder, context, texture_loader, renderer, camera, scene, raycaster, mouse, controls, effects, manager, reticle;
 var frameTime = 0, lastLoop, thisLoop, fpsOut, filterStrength = 20;
+var updateFcts	= [];
+var ring_texture_array = [];
+
+var ringIndex = 0;
 
 function init(){
 
@@ -62,24 +66,40 @@ function initScene( location_json ){
 
 	// THIS IS A TEST 
 	var geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-	var material = new THREE.MeshNormalMaterial();
-	var cube = new THREE.Mesh(geometry, material);
+	var texture = texture_loader.load("../static/assets/ring/frame_0_delay-0.04s.gif");
+	for (var i=0; i<20; i++){
+		ring_texture_array.push(texture_loader.load("../static/assets/ring/frame_"+i+"_delay-0.04s.gif"));
+	}
+	texture.needsUpdate = true;
+	var material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+	material.needsUpdate = true;
+	updateFcts.push(function(delta, now){
+		material.map = ring_texture_array[ringIndex];
+		ringIndex++;
+		if (ringIndex==20) ringIndex=0;
+	});
+	var cube = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
 	reticle.add_collider(cube);
-	var texture = texture_loader.load("../static/assets/ring.gif");
+	
 	cube.ongazelong = function(){
 	  	this.material = reticle.get_random_hex_material();
-	}
+	};
 
 	cube.ongazeover = function(){
-		material.map = texture;
+		//material.map = texture;
+		reticle.reticle_object.geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
 		reticle.reticle_object.material = material;
-	}
+	};
 
 	cube.ongazeout = function(){
+		reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
 	  //this.material = reticle.default_material();
-	  material.map = null;
-	  reticle.reticle_object.material = material;
-	}
+	  //material.map = null;
+	  //reticle.reticle_object.material = material;
+	  //reticle.reticle_object.material = new THREE.MeshNormalMaterial();
+	  //reticle.reticle_object = new THREE.Mesh(new THREE.SphereGeometry(0.05, 0.05, 0.05), new THREE.MeshBasicMaterial());
+	};
+
 	cube.position.z = -1;
 	scene.add(cube);
 	// END TEST
@@ -97,6 +117,10 @@ function render(){
 	var thisFrameTime = (thisLoop = new Date()) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
 	lastLoop = thisLoop;
+
+	updateFcts.forEach(function(updateFn){
+		updateFn(frameTime/1000, thisFrameTime/1000);
+	});
 }
 
 function buildSkybox(skyboxTextureArray){
