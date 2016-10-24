@@ -7,6 +7,7 @@ var ringIndex = 0;
 var mixer, action1, sceneAnimationClip1;
 
 var clock = new THREE.Clock();
+var cssrenderer;
 
 function init(){
 
@@ -56,6 +57,7 @@ function initScene( location_json ){
 	effect 				= new THREE.VREffect(renderer);
 	manager 			= new WebVRManager(renderer, effect);
 	reticle 			= vreticle.Reticle(camera);
+	cssrenderer 		= new THREE.CSS3DRenderer();
 
 	scene.add(camera);
 
@@ -66,6 +68,12 @@ function initScene( location_json ){
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	effect.setSize(window.innerWidth, window.innerHeight);
 	container.appendChild( renderer.domElement );
+	cssrenderer.setSize( window.innerWidth, window.innerHeight );
+	cssrenderer.domElement.style.position = 'absolute';
+	cssrenderer.domElement.style.top = 0;
+	container.appendChild( cssrenderer.domElement );
+
+	buildCSSElement('/static/html/prova.html', 0, 0, -100, 0, 0, 0);
 
 	// THIS IS A TEST 
 	var geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
@@ -113,35 +121,9 @@ function initScene( location_json ){
 	    obj.children[0].children.forEach(function (child, i){
 	    	if( !child.name.includes("Content") && !child.name.includes("Panel") ) child.material.wireframe=true;
 	    	if ( child.name.includes("Content") ){
-	    		var videoTexture;
-	    		if (obj.children.indexOf(child)%2==0){
-	    		  	videoTexture = new THREEx.VideoTexture("../static/assets/big_buck_bunny.webm");
-	    		} else {
-	    			videoTexture = new THREEx.VideoTexture("../static/js/small.mp4");
-	    		}
-				var video	= videoTexture.video;
-				updateFcts.push(function(delta, now){
-					videoTexture.update(delta, now);
-				});
-				var testmaterial	= new THREE.MeshBasicMaterial({
-					map	: videoTexture.texture
-				});
-				var testgeometry = new THREE.PlaneGeometry(2, 2);
-				child.material = testmaterial;
-			    child.geometry = testgeometry;
-			    reticle.add_collider(child);
-			    child.ongazelong = function(){
-				  	video.play();
-				  	reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
-				};
-				child.ongazeover = function(){
-					reticle.reticle_object.geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
-					reticle.reticle_object.material = ring_material;
-				};
-				child.ongazeout = function(){
-					video.pause();
-					reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
-				};
+	    		buildCSSElement('https://www.youtube.com/embed/LRP8d7hhpoQ', obj.children[0].position.x + child.position.x*62, -child.position.y*35, -obj.children[0].position.z*440, 0, obj.children[0].rotation.y*1.1, 0);
+	    		console.log("child posx: " + child.position.x);
+	    		console.log("oyster roty: " + obj.children[0].rotation.y);
 	    	}
 	    	if (child.name.includes("Panel")){
 	    		child.material.emissive = new THREE.Color( 0xffffff );
@@ -157,7 +139,7 @@ function initScene( location_json ){
 	    console.log(obj);
 	});
 	// END TEST
-
+	
 	buildSkybox(location_json.map.skybox);
 	render();
 }
@@ -180,6 +162,8 @@ function render(){
 	updateFcts.forEach(function(updateFn){
 		updateFn(frameTime/1000, thisFrameTime/1000);
 	});
+
+	cssrenderer.render( scene, camera );
 }
 
 function buildSkybox(skyboxTextureArray){
@@ -199,12 +183,32 @@ function buildSkybox(skyboxTextureArray){
     }
 
 	var skyboxmesh = new THREE.Mesh( 
-		new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7), 
+		new THREE.BoxGeometry( 1000, 1000, 1000, 7, 7, 7), 
 		new THREE.MultiMaterial( skyboxmaterials ) );
 	skyboxmesh.name = "skybox";
 	skyboxmesh.scale.x = - 1;
 	scene.add( skyboxmesh );
 
+}
+
+function buildCSSElement(url, posx, posy, posz, rotx, roty, rotz){
+
+	var element = document.createElement( 'iframe' );
+	element.src = url;
+	element.style.width = '640px';
+	element.style.height = '360px';
+	element.style.border = '0px';
+
+	var object = new THREE.CSS3DObject( element );
+	object.position.x = posx;
+	object.position.y = posy;
+	object.position.z = posz;
+	object.rotation.x = rotx;
+	object.rotation.y = roty;
+	object.rotation.z = rotz;
+	object.scale.x = 0.25;
+	object.scale.y = 0.25;
+	scene.add( object );
 }
 
 function onWindowResize() {
