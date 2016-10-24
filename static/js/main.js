@@ -73,7 +73,7 @@ function initScene( location_json ){
 	cssrenderer.domElement.style.top = 0;
 	container.appendChild( cssrenderer.domElement );
 
-	//buildCSSElement('/static/html/prova.html', 0, 0, -100, 0, 0, 0);
+	buildCSSElement('/static/html/testMenu.html', 100, 0, -200, 0, 0, 0);
 
 	// THIS IS A TEST 
 	var geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
@@ -250,8 +250,8 @@ function buildCSSElement(url, posx, posy, posz, rotx, roty, rotz){
 
 	var element = document.createElement( 'iframe' );
 	element.src = url;
-	element.style.width = '700px';
-	element.style.height = '400px';
+	element.style.width = '980px';
+	element.style.height = '560px';
 	element.style.border = '0px';
 
 	var object = new THREE.CSS3DObject( element );
