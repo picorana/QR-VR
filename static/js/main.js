@@ -209,6 +209,7 @@ function buildCSSSkybox(skyboxTextureArray){
 					var side = sides[ i ];
 
 					var element = document.createElement( 'img' );
+					element.setAttribute('draggable', false);
 					element.width = 1026; // 2 pixels extra to close the gap.
 					element.src = side.url;
 
