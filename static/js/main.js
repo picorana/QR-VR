@@ -73,7 +73,7 @@ function initScene( location_json ){
 	cssrenderer.domElement.style.top = 0;
 	container.appendChild( cssrenderer.domElement );
 
-	buildCSSElement('/static/html/prova.html', 0, 0, -100, 0, 0, 0);
+	//buildCSSElement('/static/html/prova.html', 0, 0, -100, 0, 0, 0);
 
 	// THIS IS A TEST 
 	var geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
@@ -140,7 +140,9 @@ function initScene( location_json ){
 	});
 	// END TEST
 	
-	buildSkybox(location_json.map.skybox);
+
+	buildCSSSkybox(location_json.map.skybox);
+	//buildSkybox(location_json.map.skybox);
 	render();
 }
 
@@ -148,6 +150,8 @@ function render(){
 	requestAnimationFrame( render );
 	manager.render(scene, camera);
 	reticle.reticle_loop();
+
+	cssrenderer.render( scene, camera );
 
 	controls.update(); 
 
@@ -163,7 +167,57 @@ function render(){
 		updateFn(frameTime/1000, thisFrameTime/1000);
 	});
 
-	cssrenderer.render( scene, camera );
+	
+}
+
+function buildCSSSkybox(skyboxTextureArray){
+	var sides = [
+					{
+						url: skyboxTextureArray[0],
+						position: [ -512, 0, 0 ],
+						rotation: [ 0, Math.PI / 2, 0 ]
+					},
+					{
+						url: skyboxTextureArray[1],
+						position: [ 512, 0, 0 ],
+						rotation: [ 0, -Math.PI / 2, 0 ]
+					},
+					{
+						url: skyboxTextureArray[2],
+						position: [ 0,  512, 0 ],
+						rotation: [ Math.PI / 2, 0, Math.PI ]
+					},
+					{
+						url: skyboxTextureArray[3],
+						position: [ 0, -512, 0 ],
+						rotation: [ - Math.PI / 2, 0, Math.PI ]
+					},
+					{
+						url: skyboxTextureArray[4],
+						position: [ 0, 0,  512 ],
+						rotation: [ 0, Math.PI, 0 ]
+					},
+					{
+						url: skyboxTextureArray[5],
+						position: [ 0, 0, -512 ],
+						rotation: [ 0, 0, 0 ]
+					}
+				];
+
+				for ( var i = 0; i < sides.length; i ++ ) {
+
+					var side = sides[ i ];
+
+					var element = document.createElement( 'img' );
+					element.width = 1026; // 2 pixels extra to close the gap.
+					element.src = side.url;
+
+					var object = new THREE.CSS3DObject( element );
+					object.position.fromArray( side.position );
+					object.rotation.fromArray( side.rotation );
+					scene.add( object );
+
+				}
 }
 
 function buildSkybox(skyboxTextureArray){
@@ -195,8 +249,8 @@ function buildCSSElement(url, posx, posy, posz, rotx, roty, rotz){
 
 	var element = document.createElement( 'iframe' );
 	element.src = url;
-	element.style.width = '640px';
-	element.style.height = '360px';
+	element.style.width = '700px';
+	element.style.height = '400px';
 	element.style.border = '0px';
 
 	var object = new THREE.CSS3DObject( element );
