@@ -10,19 +10,20 @@ var clock = new THREE.Clock();
 var cssrenderer;
 
 function init(){
-
+	//---Print fps onscreen every 1s
 	fpsOut = document.getElementById('fps');
 	lastLoop = new Date();
 	setInterval(function(){
 	  	fpsOut.innerHTML = (1000/frameTime).toFixed(1) + " fps"; 
 		},1000);
 
-
+	//---Check device capacities
 	var is_webgl_enabled 		= Detector.webgl? true : false;
 	var can_handle_orientation 	= handleOrientation();
 	var is_mobile 				= isMobile();
 	var browser 				= detect_browser();
 
+	//---Print device info onscreen
   	info = document.getElementById('info');
   	info.innerHTML += 
 		"webgl: " + is_webgl_enabled +
@@ -30,12 +31,16 @@ function init(){
 		(is_mobile? " mobile" : " desktop") +
 		" " + navigator.platform;
 
+	//---Attach listeners to the devices aspect changes, and adjust screen
 	// note: orientationchange = screen rotation, deviceorientation = gyroscope
 	window.addEventListener( 'orientationchange', 	onScreenOrientationChange, 	false );
   	//window.addEventListener( 'deviceorientation', 	handleOrientation, 			false );
   	window.addEventListener( 'resize', 				onWindowResize, 			false );
 
+  	//---Get scene (map_id) parameters from url
 	var map_id = getParameterByName( "map_id" );
+	
+	//---Load JSON containing specs about the diferents scenes, then initializate the current scene
 	$.getJSON( "/static/json/locations.json", function( json, status ) { 
 		initScene(json.locations[map_id]);	
 	})
@@ -45,13 +50,16 @@ function init(){
 }
 
 function initScene( location_json ){
+	//--Get the DOM elements where the renderer will be placed
+	container 			= document.getElementById( 'container' );
+	canvas_placeholder 	= document.createElement( 'canvas' );
+
+	//---Instantiate the basic THREE elements to construct the scene
 	camera 				= new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.3, 10000 );
 	scene 				= new THREE.Scene();
 	raycaster 			= new THREE.Raycaster();
 	mouse 				= new THREE.Vector2();
 	renderer 			= new THREE.WebGLRenderer({ antialias: true });
-	container 			= document.getElementById( 'container' );
-	canvas_placeholder 	= document.createElement( 'canvas' );
 	texture_loader		= new THREE.TextureLoader();
 	controls 			= new THREE.VRControls(camera);
 	effect 				= new THREE.VREffect(renderer);
@@ -59,12 +67,15 @@ function initScene( location_json ){
 	reticle 			= vreticle.Reticle(camera);
 	cssrenderer 		= new THREE.CSS3DRenderer();
 
+	//---First element added to scene: the camera
 	scene.add(camera);
 
+	//---Create the canvas?? 
 	context = canvas_placeholder.getContext( '2d' );
 	context.fillStyle = 'rgb( 200, 200, 200 )';
 	context.fillRect( 0, 0, canvas_placeholder.width, canvas_placeholder.height );
 
+	//---Append the renderer to the canvas
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	effect.setSize(window.innerWidth, window.innerHeight);
 	container.appendChild( renderer.domElement );
@@ -76,6 +87,7 @@ function initScene( location_json ){
 	buildCSSElement('/static/html/testMenu.html', 100, 0, -200, 0, 0, 0);
 
 	// THIS IS A TEST 
+	//--Create the AIM element
 	var geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
 	var texture = texture_loader.load("../static/assets/ring/frame_0_delay-0.04s.gif");
 	for (var i=0; i<20; i++){
@@ -109,40 +121,56 @@ function initScene( location_json ){
 	cube.position.z = -5;
 	cube.position.x = 2;
 	scene.add(cube);
+	//-- Finished AIM element
 
+	//--Load the scene on JSON, containing the Oysters, Panels, Buttons and content Meshes
 	var loader = new THREE.ObjectLoader();
 	loader.load("../static/json/048_MenuMeshChildren.json",function ( obj ) {
+		//---Rotate the original scene to align it with the THREE generated Skybox
 	    obj.rotation.y = Math.PI;
 	    obj.rotation.x = Math.PI/2;
 	    obj.position.z = -4;
 
+	    //---Get the Animations on the scene. The exporter creates only one, with diferent tracks for each of the animated propoerties of each object
+	    //Ex: "animations":[{"tracks":[ {panel00.position:...} , {panel00.quaternion:...} ,..., {button02.scale} ]}]
 	    sceneAnimationClip1 = obj.animations[0];
 
+	    //---The top level elements on the scene are the "oysters". Here we loop on each of it's children
 	    obj.children[0].children.forEach(function (child, i){
+	    	//---Changing the material to wireframe, only for some of them
 	    	if( !child.name.includes("Content") && !child.name.includes("Panel") ) child.material.wireframe=true;
+	    	//---Creating a CSS element on which display a video, and then adjusting the position manualy in order to align it with the panel :P
 	    	if ( child.name.includes("Content") ){
 	    		buildCSSElement('https://www.youtube.com/embed/LRP8d7hhpoQ', obj.children[0].position.x + child.position.x*62, -child.position.y*35, -obj.children[0].position.z*440, 0, obj.children[0].rotation.y*1.1, 0);
 	    		console.log("child posx: " + child.position.x);
 	    		console.log("oyster roty: " + obj.children[0].rotation.y);
 	    	}
+	    	//--Setting the emissive color of each "Panel" to white
+	    	//--TODO: Set the material "emmisive map" to use the texture, obtaining a emmisive colored object. 
 	    	if (child.name.includes("Panel")){
 	    		child.material.emissive = new THREE.Color( 0xffffff );
 	    	}
 	    });
 
+	    //---Create a Animation mixer and pass the loaded scene
 		mixer = new THREE.AnimationMixer( obj );
+		//---Add the loaded action and play it
 	    action1 = mixer.clipAction( sceneAnimationClip1 );
 	    action1.loop=THREE.LoopRepeat;
 	    action1.play();
 
+	    //---Add the loaded scene to the main scene
 	    scene.add( obj );
 	    console.log(obj);
 	});
 	// END TEST
 	
 
+	//---Build the skybox
 	buildCSSSkybox(location_json.map.skybox);
 	//buildSkybox(location_json.map.skybox);
+	
+	//---Render :P
 	render();
 }
 
