@@ -91,7 +91,7 @@ function initScene( location_json ){
 	});
 
 	var loader = new THREE.ObjectLoader();
-	loader.load("../static/json/048_MenuMeshChildren.json",function ( obj ) {
+	loader.load("../static/json/supertest.json",function ( obj ) {
 	    obj.rotation.y = Math.PI;
 	    obj.rotation.x = Math.PI/2;
 	    obj.position.z = -4;
@@ -113,43 +113,34 @@ function initScene( location_json ){
 	    videoTexture.magFilter = THREE.LinearFilter;
 
 	    obj.children.forEach(function(oyster, i){
-
 	    	reticle.add_collider(oyster);
-
-	    	
 
 	    	clickable_objects.push(oyster);
 
 	    	scalefactor[i] = -0.1;
 	    	scalesum[i] = 0;
 
-	    	oyster.callback = function() { 
-		    	oyster.children.forEach(function (child, j){
-		    		scalesum[i] = 0.1;
-		    	});
-		    };
-
 			oyster.ongazeover = function(){
-				//scalefactor[i] = 1;
 				scalesum[i] = 0.1;
 			};
 
 			oyster.ongazeout = function(){
 				scalesum[i] = -0.1;
-				//scalefactor[i] = 0;
+				video.pause();
 			};
 
 		    oyster.children.forEach(function (child, j){
-
+		    	
 		    	clickable_objects.push(child);
-
-		    	if( !child.name.includes("Content") && !child.name.includes("Panel") ) child.material.wireframe=true;
-
-		    	if ( child.name.includes("Content") ){  
+		    	console.log(child);
+		    	if (child.name == "EmptyKelvin") return;
+		    	if( child.material.name.includes("wire") ) child.material.wireframe=true;
+				
+		    	if ( child.name.includes("content") ){  
 				    var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
-				    var movieGeometry = new THREE.PlaneGeometry( 2, 2);
+				    //var movieGeometry = new THREE.PlaneGeometry( , 2);
 				    child.material = movieMaterial;
-				    child.geometry = movieGeometry;
+				    //child.geometry = movieGeometry;
 				    reticle.add_collider(child);
 				    child.ongazelong = function(){
 					  	video.play();
@@ -191,7 +182,7 @@ function render(){
 	controls.update(); 
 
 	var delta = 0.75 * clock.getDelta();
-	mixer.update(delta);
+	//mixer.update(delta);
 
 	var thisFrameTime = (thisLoop = new Date()) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
@@ -208,14 +199,22 @@ function render(){
 		updateFn(frameTime/1000, thisFrameTime/1000);
 	});
 
-	scene.children[2].children.forEach(function(oyster, i){
-		scalefactor[i] += scalesum[i];
-		if (scalefactor[i]<=0.001) scalefactor[i] = 0.001;
-		if (scalefactor[i]>=1) scalefactor[i] = 1;
-		oyster.children.forEach(function(child, j){
-			child.scale.set(scalefactor[i], scalefactor[i], scalefactor[i]);
+	try {
+		scene.children[2].children.forEach(function(oyster, i){
+			scalefactor[i] += scalesum[i];
+			//console.log(oyster.name);
+			//scalefactor[i] = 1;
+			if (scalefactor[i]<=0.001) scalefactor[i] = 0.001;
+			if (scalefactor[i]>=1) scalefactor[i] = 1;
+			oyster.children.forEach(function(child, j){
+				child.scale.set(scalefactor[i], scalefactor[i], scalefactor[i]);
+			});
 		});
-	});
+	} catch (e){
+		console.log(e);
+	}
+
+	
 }
 
 function buildSkybox(skyboxTextureArray){
@@ -282,8 +281,7 @@ function onDocumentMouseDown( event ) {
     var intersects = raycaster.intersectObjects( clickable_objects ); 
 
     if ( intersects.length > 0 ) {
-    	//console.log(intersects[0].object.name);
-        intersects[0].object.callback();
+        intersects[0].object.ongazeover();
     }
 
 }
