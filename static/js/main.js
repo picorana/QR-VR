@@ -6,6 +6,8 @@ var ring_texture_array = [];
 var ringIndex = 0;
 var mixer, action1, sceneAnimationClip1;
 
+var videoImageContext, videoImage, video;
+
 var clock = new THREE.Clock();
 
 function init(){
@@ -28,6 +30,8 @@ function init(){
 		"<br> browser: " + browser +
 		(is_mobile? " mobile" : " desktop") +
 		" " + navigator.platform;
+
+		
 
 	// note: orientationchange = screen rotation, deviceorientation = gyroscope
 	window.addEventListener( 'orientationchange', 	onScreenOrientationChange, 	false );
@@ -109,45 +113,52 @@ function initScene( location_json ){
 	    obj.position.z = -4;
 
 	    sceneAnimationClip1 = obj.animations[0];
+	    
+	    video = document.getElementById('thevideo');
+		    		
+		videoImage = document.createElement( 'canvas' );
+		document.addEventListener( 'click', function ( event ) {
+            video.play();
+        } );
 
-	    obj.children[0].children.forEach(function (child, i){
-	    	if( !child.name.includes("Content") && !child.name.includes("Panel") ) child.material.wireframe=true;
-	    	if ( child.name.includes("Content") ){
-	    		var videoTexture;
-	    		if (obj.children.indexOf(child)%2==0){
-	    		  	videoTexture = new THREEx.VideoTexture("../static/assets/big_buck_bunny.webm");
-	    		} else {
-	    			videoTexture = new THREEx.VideoTexture("../static/js/small.mp4");
-	    		}
-				var video	= videoTexture.video;
-				updateFcts.push(function(delta, now){
-					videoTexture.update(delta, now);
-				});
-				var testmaterial	= new THREE.MeshBasicMaterial({
-					map	: videoTexture.texture
-				});
-				var testgeometry = new THREE.PlaneGeometry(2, 2);
-				child.material = testmaterial;
-			    child.geometry = testgeometry;
-			    reticle.add_collider(child);
-			    child.ongazelong = function(){
-				  	video.play();
-				  	reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
-				};
-				child.ongazeover = function(){
-					reticle.reticle_object.geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
-					reticle.reticle_object.material = ring_material;
-				};
-				child.ongazeout = function(){
-					video.pause();
-					reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
-				};
-	    	}
-	    	if (child.name.includes("Panel")){
-	    		child.material.emissive = new THREE.Color( 0xffffff );
-	    	}
-	    });
+	    videoImage.width = 560;
+	    videoImage.height = 320;
+	    videoImageContext = videoImage.getContext( '2d' );
+	    videoTexture = new THREE.Texture( videoImage );
+	    videoTexture.minFilter = THREE.LinearFilter;
+	    videoTexture.magFilter = THREE.LinearFilter;
+	    
+	    obj.children.forEach(function(oyster, i){
 
+		    oyster.children.forEach(function (child, i){
+		    	console.log(child.name);
+		    	if( !child.name.includes("Content") && !child.name.includes("Panel") ) child.material.wireframe=true;
+		    	if ( child.name.includes("Content") ){
+		    		
+				    
+				    var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
+				    var movieGeometry = new THREE.PlaneGeometry( 2, 2);
+				    child.material = movieMaterial;
+				    child.geometry = movieGeometry;
+				    reticle.add_collider(child);
+				    child.ongazelong = function(){
+					  	video.play();
+					  	reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
+					};
+					child.ongazeover = function(){
+						reticle.reticle_object.geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+						reticle.reticle_object.material = ring_material;
+					};
+					child.ongazeout = function(){
+						video.pause();
+						reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
+					};
+		    	}
+		    	if (child.name.includes("Panel")){
+		    		child.material.emissive = new THREE.Color( 0xffffff );
+		    	}
+		    });
+		});
 		mixer = new THREE.AnimationMixer( obj );
 	    action1 = mixer.clipAction( sceneAnimationClip1 );
 	    action1.loop=THREE.LoopRepeat;
@@ -175,6 +186,12 @@ function render(){
 	var thisFrameTime = (thisLoop = new Date()) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
 	lastLoop = thisLoop;
+
+	if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
+        videoImageContext.drawImage( video, 0, 0 );
+        if ( videoTexture ) 
+            videoTexture.needsUpdate = true;
+    }
 
 
 	updateFcts.forEach(function(updateFn){

@@ -7,6 +7,7 @@
 	<script src='../static/js/lib/threejs/examples/js/Detector.js'></script>
 	<script src='../static/js/lib/threejs/examples/js/renderers/SoftwareRenderer.js'></script>
 	<script src='../static/js/lib/threejs/examples/js/renderers/CSS3DRenderer.js'></script>
+	<!--<script src='../static/js/lib/threejs/examples/js/renderers/CSS3DStereoRenderer.js'></script>-->
 	<script src='../static/js/lib/threejs/examples/js/renderers/CanvasRenderer.js'></script>
 	<script src='../static/js/lib/threejs/examples/js/renderers/Projector.js'></script>
 	<script src='../static/js/lib/threex.videotexture.js'></script>
@@ -50,11 +51,16 @@
 	<div id="container">
 		<span id='fps'>fps</span>
 		<span id='info'></span>
+		<video id='thevideo' style="display:none" controls>
+         	<source src="/static/js/small.mp4" type='video/mp4'>
+		</video>
 	</div>
 	
-	<link rel="manifest" href="../manifest.webmanifest">
+	
+
 	<script src='../static/js/device_checks.js'></script>
 	<script src='../static/js/guiobject.js'></script>
+
 	<script src='../static/js/main.js'></script>
 	
 </body>
