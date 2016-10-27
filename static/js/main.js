@@ -9,6 +9,7 @@ var mixer, action1, sceneAnimationClip1;
 var clock = new THREE.Clock();
 var cssrenderer;
 
+
 function init(){
 
 	fpsOut = document.getElementById('fps');
@@ -68,10 +69,15 @@ function initScene( location_json ){
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	effect.setSize(window.innerWidth, window.innerHeight);
 	container.appendChild( renderer.domElement );
-	cssrenderer.setSize( window.innerWidth, window.innerHeight );
+	cssrenderer.setSize( window.innerWidth/2, window.innerHeight );
 	cssrenderer.domElement.style.position = 'absolute';
 	cssrenderer.domElement.style.top = 0;
-	container.appendChild( cssrenderer.domElement );
+	container.appendChild(cssrenderer.domElement);
+
+	var cssrenderer2 = JSON.parse(JSON.stringify(cssrenderer));
+	console.log(cssrenderer);
+	console.log(cssrenderer2);
+	//container.appendChild(cssrenderer2.domElement);
 
 	buildCSSElement('/static/html/testMenu.html', 100, 0, -200, 0, 0, 0);
 
@@ -170,6 +176,11 @@ function render(){
 	
 }
 
+function testEvent(){
+	var event = new CustomEvent("superbutton_clicked_event", { 'detail': 'increment' });
+		    window.dispatchEvent(event);
+}
+
 function buildCSSSkybox(skyboxTextureArray){
 	var sides = [
 					{
@@ -265,6 +276,8 @@ function buildCSSElement(url, posx, posy, posz, rotx, roty, rotz){
 	object.scale.y = 0.25;
 	scene.add( object );
 }
+
+
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
