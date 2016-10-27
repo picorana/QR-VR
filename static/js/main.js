@@ -3,12 +3,20 @@ var frameTime = 0, lastLoop, thisLoop, fpsOut, filterStrength = 20;
 var updateFcts	= [];
 var ring_texture_array = [];
 
+var raycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2();
+
+var clickable_objects = [];
+var clicked_objects = [];
+
 var ringIndex = 0;
 var mixer, action1, sceneAnimationClip1;
 
 var videoImageContext, videoImage, video;
 
 var clock = new THREE.Clock();
+var scalefactor = [];
+var scalesum = [];
 
 function init(){
 
@@ -32,11 +40,9 @@ function init(){
 		" " + navigator.platform;
 
 		
-
-	// note: orientationchange = screen rotation, deviceorientation = gyroscope
 	window.addEventListener( 'orientationchange', 	onScreenOrientationChange, 	false );
-  	//window.addEventListener( 'deviceorientation', 	handleOrientation, 			false );
   	window.addEventListener( 'resize', 				onWindowResize, 			false );
+  	window.addEventListener( 'mousedown', onDocumentMouseDown , false );
 
 	var map_id = getParameterByName( "map_id" );
 	$.getJSON( "/static/json/locations.json", function( json, status ) { 
@@ -71,8 +77,6 @@ function initScene( location_json ){
 	effect.setSize(window.innerWidth, window.innerHeight);
 	container.appendChild( renderer.domElement );
 
-	// THIS IS A TEST 
-	var geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
 	var texture = texture_loader.load("../static/assets/ring/frame_0_delay-0.04s.gif");
 	for (var i=0; i<20; i++){
 		ring_texture_array.push(texture_loader.load("../static/assets/ring/frame_"+i+"_delay-0.04s.gif"));
@@ -85,26 +89,6 @@ function initScene( location_json ){
 		ringIndex++;
 		if (ringIndex==20) ringIndex=0;
 	});
-	var cube = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
-	reticle.add_collider(cube);
-	
-	cube.ongazelong = function(){
-	  	this.material = reticle.get_random_hex_material();
-	};
-
-	cube.ongazeover = function(){
-		//material.map = texture;
-		reticle.reticle_object.geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
-		reticle.reticle_object.material = ring_material;
-	};
-
-	cube.ongazeout = function(){
-		reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
-	};
-
-	cube.position.z = -5;
-	cube.position.x = 2;
-	scene.add(cube);
 
 	var loader = new THREE.ObjectLoader();
 	loader.load("../static/json/048_MenuMeshChildren.json",function ( obj ) {
@@ -127,15 +111,41 @@ function initScene( location_json ){
 	    videoTexture = new THREE.Texture( videoImage );
 	    videoTexture.minFilter = THREE.LinearFilter;
 	    videoTexture.magFilter = THREE.LinearFilter;
-	    
+
 	    obj.children.forEach(function(oyster, i){
 
-		    oyster.children.forEach(function (child, i){
-		    	console.log(child.name);
+	    	reticle.add_collider(oyster);
+
+	    	
+
+	    	clickable_objects.push(oyster);
+
+	    	scalefactor[i] = -0.1;
+	    	scalesum[i] = 0;
+
+	    	oyster.callback = function() { 
+		    	oyster.children.forEach(function (child, j){
+		    		scalesum[i] = 0.1;
+		    	});
+		    };
+
+			oyster.ongazeover = function(){
+				//scalefactor[i] = 1;
+				scalesum[i] = 0.1;
+			};
+
+			oyster.ongazeout = function(){
+				scalesum[i] = -0.1;
+				//scalefactor[i] = 0;
+			};
+
+		    oyster.children.forEach(function (child, j){
+
+		    	clickable_objects.push(child);
+
 		    	if( !child.name.includes("Content") && !child.name.includes("Panel") ) child.material.wireframe=true;
-		    	if ( child.name.includes("Content") ){
-		    		
-				    
+
+		    	if ( child.name.includes("Content") ){  
 				    var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
 				    var movieGeometry = new THREE.PlaneGeometry( 2, 2);
 				    child.material = movieMaterial;
@@ -159,6 +169,7 @@ function initScene( location_json ){
 		    	}
 		    });
 		});
+
 		mixer = new THREE.AnimationMixer( obj );
 	    action1 = mixer.clipAction( sceneAnimationClip1 );
 	    action1.loop=THREE.LoopRepeat;
@@ -167,7 +178,6 @@ function initScene( location_json ){
 	    scene.add( obj );
 	    console.log(obj);
 	});
-	// END TEST
 
 	buildSkybox(location_json.map.skybox);
 	render();
@@ -196,6 +206,15 @@ function render(){
 
 	updateFcts.forEach(function(updateFn){
 		updateFn(frameTime/1000, thisFrameTime/1000);
+	});
+
+	scene.children[2].children.forEach(function(oyster, i){
+		scalefactor[i] += scalesum[i];
+		if (scalefactor[i]<=0.001) scalefactor[i] = 0.001;
+		if (scalefactor[i]>=1) scalefactor[i] = 1;
+		oyster.children.forEach(function(child, j){
+			child.scale.set(scalefactor[i], scalefactor[i], scalefactor[i]);
+		});
 	});
 }
 
@@ -249,6 +268,24 @@ function getParameterByName(name, url) {
     if (!results) return 0;
     if (!results[2]) return 0;
     return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+function onDocumentMouseDown( event ) {
+
+    event.preventDefault();
+
+    mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+
+    raycaster.setFromCamera( mouse, camera );
+
+    var intersects = raycaster.intersectObjects( clickable_objects ); 
+
+    if ( intersects.length > 0 ) {
+    	//console.log(intersects[0].object.name);
+        intersects[0].object.callback();
+    }
+
 }
 
 init();

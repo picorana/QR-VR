@@ -53,6 +53,19 @@
     			]
     		},
     		"creatures": []
-    	}
+    	},
+        {
+            "map": {
+                "skybox":[
+                    "/static/assets/space_skybox/bkg1_right.png", 
+                    "/static/assets/space_skybox/bkg1_left.png", 
+                    "/static/assets/space_skybox/bkg1_top.png",
+                    "/static/assets/space_skybox/bkg1_bot.png",
+                    "/static/assets/space_skybox/bkg1_front.png",
+                    "/static/assets/space_skybox/bkg1_back.png"
+                ]
+            },
+            "creatures": []
+        }
 	]
 }
