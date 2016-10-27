@@ -1,0 +1,65 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+        <link rel="apple-touch-icon" href="apple-touch-icon.png">
+        <!-- Place favicon.ico in the root directory -->
+
+
+    </head>
+    <body>
+
+        <video class="videoeventer" id="video1" width="320" height="240" controls>
+             <source src="img/small.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <video class="videoeventer" id="video2" width="320" height="240" controls>
+             <source src="img/small.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <script type="text/javascript">
+    
+
+             var videos = document.querySelectorAll('video');
+
+             for (video in videos){
+                console.log(video);
+             }
+
+            // Create the event
+            var event = new CustomEvent("videoPlaying", { "detail": "The video is playing" });
+
+            var vid = document.getElementById("video1");
+            vid.onplay = function() {
+                // alert('playing');
+                // Dispatch/Trigger/Fire the event
+                document.dispatchEvent(event);
+            };
+
+            var vid2 = document.getElementById("video2");
+            
+
+            // Add an event listener
+            document.addEventListener("videoPlaying", function(e) {
+              console.log("playing"); // Prints "Example of an event"
+              vid2.play();
+            });
+
+            
+            
+
+            
+
+        </script>
+
+
+
+    </body>
+</html>
