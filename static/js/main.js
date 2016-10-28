@@ -91,7 +91,7 @@ function initScene( location_json ){
 	});
 
 	var loader = new THREE.ObjectLoader();
-	loader.load("../static/json/supertest.json",function ( obj ) {
+	loader.load("../static/json/048_OysterTestScene.json",function ( obj ) {
 	    obj.rotation.y = Math.PI;
 	    obj.rotation.x = Math.PI/2;
 	    obj.position.z = -4;
@@ -120,11 +120,21 @@ function initScene( location_json ){
 	    	scalefactor[i] = -0.1;
 	    	scalesum[i] = 0;
 
+	    	//oyster.material.wireframe = true;
+	    	if (oyster.name.includes("gem")) return;
+	    	else {
+	    		oyster.material.wireframe=true;
+	    		oyster.material.transparent = true;
+	    		oyster.material.opacity = 0;
+	    	}
+
 			oyster.ongazeover = function(){
+				console.log("gaze over: " + oyster.name);
 				scalesum[i] = 0.1;
 			};
 
 			oyster.ongazeout = function(){
+				console.log("gaze out: " + oyster.name);
 				scalesum[i] = -0.1;
 				video.pause();
 			};
@@ -133,12 +143,17 @@ function initScene( location_json ){
 		    	
 		    	clickable_objects.push(child);
 		    	console.log(child);
-		    	if (child.name == "EmptyKelvin") return;
+		    	if( child.name == "EmptyKelvin") return;
 		    	if( child.material.name.includes("wire") ) child.material.wireframe=true;
+		    	if( child.name.includes("bottone") ) {
+		    		child.material.wireframe=true;
+		    		child.material.transparent = true;
+	    			child.material.opacity = 0.1;
+		    	}
 				
 		    	if ( child.name.includes("content") ){  
 				    var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
-				    //var movieGeometry = new THREE.PlaneGeometry( , 2);
+				    //var movieGeometry = new THREE.PlaneGeometry( 3, 1);
 				    child.material = movieMaterial;
 				    //child.geometry = movieGeometry;
 				    reticle.add_collider(child);
@@ -155,7 +170,10 @@ function initScene( location_json ){
 						reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
 					};
 		    	}
-		    	if (child.name.includes("Panel")){
+		    	if (child.name.includes("panel")){
+		    		child.material.emissive = new THREE.Color( 0xffffff );
+		    	}
+		    	if (child.name.includes("coso") || child.name.includes("rotator") || child.name.includes("emissive")){
 		    		child.material.emissive = new THREE.Color( 0xffffff );
 		    	}
 		    });
@@ -182,7 +200,7 @@ function render(){
 	controls.update(); 
 
 	var delta = 0.75 * clock.getDelta();
-	//mixer.update(delta);
+	mixer.update(delta);
 
 	var thisFrameTime = (thisLoop = new Date()) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
@@ -217,6 +235,7 @@ function render(){
 	
 }
 
+/*
 function buildSkybox(skyboxTextureArray){
 	var skyboxmaterials = [];
     for (var i=0; i<skyboxTextureArray.length; i++){ 
@@ -239,7 +258,25 @@ function buildSkybox(skyboxTextureArray){
 	skyboxmesh.name = "skybox";
 	skyboxmesh.scale.x = - 1;
 	scene.add( skyboxmesh );
+}*/
 
+function buildSkybox(skyboxTextureArray){
+	var skyboxmaterials = [];
+    for (var i=0; i<skyboxTextureArray.length; i++){ 
+    	skyboxmaterials[i] = createMaterial(skyboxTextureArray[i]);
+    }
+
+	var skyboxmesh = new THREE.Mesh( new THREE.BoxGeometry( 500, 500, 500, 7, 7, 7 ), new THREE.MultiMaterial( skyboxmaterials ) );
+	skyboxmesh.name = "skybox";
+	skyboxmesh.scale.x = - 1;
+	scene.add( skyboxmesh );
+}
+
+function createMaterial( path ) {
+    var texture = THREE.ImageUtils.loadTexture(path);
+    var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, transparent:false, shading:THREE.FlatShading } );
+ 
+    return material; 
 }
 
 function onWindowResize() {

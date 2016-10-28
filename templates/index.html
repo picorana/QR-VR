@@ -44,16 +44,41 @@
 				text-align: left;
 				color: gray;
 			}
+
+			.divbuttons{
+				position: absolute;
+				display: inline-block;
+				top:5px;
+				left: 70%;
+			}
+
+			a.button {
+			    -webkit-appearance: button;
+			    -moz-appearance: button;
+			    appearance: button;
+			    background: #0a0a0a;
+			    text-decoration: none;
+			    color: white;
+			    padding: 5px;
+			}
 	</style>
 </head>
 
 <body>
 	<div id="container">
+		
 		<span id='fps'>fps</span>
 		<span id='info'></span>
 		<video id='thevideo' style="display:none" controls>
-         	<source src="/static/js/small.mp4" type='video/mp4'>
+         	<source src="/static/assets/big_buck_bunny.webm" type='video/webm'>
 		</video>
+
+		<div class="divbuttons">
+			<a href=".?map_id=0" class="button">Desert</a>
+			<a href=".?map_id=1" class="button">Moon</a>
+			<a href=".?map_id=2" class="button">Station</a>
+			<a href=".?map_id=3" class="button">Space</a>
+		</div>
 	</div>
 	
 	
