@@ -21,19 +21,20 @@ var scalefactor = [];
 var scalesum = [];
 
 function init(){
-
+	//---Print fps onscreen every 1s
 	fpsOut = document.getElementById('fps');
 	lastLoop = new Date();
 	setInterval(function(){
 	  	fpsOut.innerHTML = (1000/frameTime).toFixed(1) + " fps"; 
 		},1000);
 
-
+	//---Check device capacities
 	var is_webgl_enabled 		= Detector.webgl? true : false;
 	var can_handle_orientation 	= handleOrientation();
 	var is_mobile 				= isMobile();
 	var browser 				= detect_browser();
 
+	//---Print device info onscreen
   	info = document.getElementById('info');
   	info.innerHTML += 
 		"webgl: " + is_webgl_enabled +
@@ -41,12 +42,15 @@ function init(){
 		(is_mobile? " mobile" : " desktop") +
 		" " + navigator.platform;
 
-		
+	//---Attach listeners to the devices aspect changes, and adjust screen
 	window.addEventListener( 'orientationchange', 	onScreenOrientationChange, 	false );
   	window.addEventListener( 'resize', 				onWindowResize, 			false );
   	window.addEventListener( 'mousedown', onDocumentMouseDown , false );
 
+  	//---Get scene (map_id) parameters from url
 	var map_id = getParameterByName( "map_id" );
+	
+	//---Load JSON containing specs about the diferents scenes, then initializate the current scene
 	$.getJSON( "/static/json/locations.json", function( json, status ) { 
 		initScene(json.locations[map_id]);	
 	})
@@ -56,29 +60,36 @@ function init(){
 }
 
 function initScene( location_json ){
+	//--Get the DOM elements where the renderer will be placed
+	container 			= document.getElementById( 'container' );
+	canvas_placeholder 	= document.createElement( 'canvas' );
+
+	//---Instantiate the basic THREE elements to construct the scene
 	camera 				= new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.3, 10000 );
 	scene 				= new THREE.Scene();
 	raycaster 			= new THREE.Raycaster();
 	mouse 				= new THREE.Vector2();
 	renderer 			= new THREE.WebGLRenderer({ antialias: true });
-	container 			= document.getElementById( 'container' );
-	canvas_placeholder 	= document.createElement( 'canvas' );
 	texture_loader		= new THREE.TextureLoader();
 	controls 			= new THREE.VRControls(camera);
 	effect 				= new THREE.VREffect(renderer);
 	manager 			= new WebVRManager(renderer, effect);
 	reticle 			= vreticle.Reticle(camera);
 
+	//---First element added to scene: the camera
 	scene.add(camera);
 
+	//---Create the canvas
 	context = canvas_placeholder.getContext( '2d' );
 	context.fillStyle = 'rgb( 200, 200, 200 )';
 	context.fillRect( 0, 0, canvas_placeholder.width, canvas_placeholder.height );
 
+	//---Append the renderer to the canvas
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	effect.setSize(window.innerWidth, window.innerHeight);
 	container.appendChild( renderer.domElement );
 
+	//--Create the AIM element
 	var texture = texture_loader.load("../static/assets/ring/frame_0_delay-0.04s.gif");
 	for (var i=0; i<20; i++){
 		ring_texture_array.push(texture_loader.load("../static/assets/ring/frame_"+i+"_delay-0.04s.gif"));
@@ -92,37 +103,52 @@ function initScene( location_json ){
 		if (ringIndex==20) ringIndex=0;
 	});
 
+
+	//--Load the scene on JSON, containing the Oysters, Panels, Buttons and content Meshes
 	var loader = new THREE.ObjectLoader();
 	loader.load("../static/json/048_OysterTestSceneISS.json",function ( obj ) {
-	    obj.rotation.y = Math.PI;
+	    //---Rotate the original scene to align it with the THREE generated Skybox
+		obj.rotation.y = Math.PI;
 	    obj.rotation.x = Math.PI/2;
 	    obj.position.z = -4;
 
+	    //---Get the Animations on the scene. The exporter creates only one, with diferent tracks for each of the animated propoerties of each object
+	    //Ex: "animations":[{"tracks":[ {panel00.position:...} , {panel00.quaternion:...} ,..., {button02.scale} ]}]
 	    sceneAnimationClip1 = obj.animations[0];
 	    
-	    video = document.getElementById('thevideo');
-		    		
+	    //--Get the video source from DOM, and create the canvas that will be used to render the video
+	    video = document.getElementById('thevideo');	
 		videoImage = document.createElement( 'canvas' );
+		//--Play the video on user click
+		//--TODO: Il video si attiva al cliccare anche se e' nascosto (si sente il souno)
 		document.addEventListener( 'click', function ( event ) {
             video.play();
         } );
 
+		//--Set the video canvas attributes
 	    videoImage.width = 560;
 	    videoImage.height = 320;
 	    videoImageContext = videoImage.getContext( '2d' );
+
+	    //Create the videotexture that will be used on the content object's material
 	    videoTexture = new THREE.Texture( videoImage );
 	    videoTexture.minFilter = THREE.LinearFilter;
 	    videoTexture.magFilter = THREE.LinearFilter;
 
-	    obj.children.forEach(function(oyster, i){
+
+	   	//---The top level elements on the scene are the "oysters". Here we loop on each of it's children
+		//TODO: stiamo anche loopando nella camera e il skybox??
+		obj.children.forEach(function(oyster, i){
+	    	//---Set the oysters to be colliders (detect the raycast from the camera)	
 	    	reticle.add_collider(oyster);
 
+	    	//--Add the Oysters to the list of clickable
 	    	clickable_objects.push(oyster);
 
 	    	scalefactor[i] = -0.1;
 	    	scalesum[i] = 0;
 
-	    	//oyster.material.wireframe = true;
+	    	//--Set the oyster colider to be transparent
 	    	if (oyster.name.includes("gem")) return;
 	    	else {
 	    		oyster.material.wireframe=true;
@@ -130,6 +156,7 @@ function initScene( location_json ){
 	    		oyster.material.opacity = 0;
 	    	}
 
+	    	//--Actions when user gaze an Oyster
 			oyster.ongazeover = function(){
 				console.log("gaze over: " + oyster.name);
 				scalesum[i] = 0.1;
@@ -141,10 +168,13 @@ function initScene( location_json ){
 				video.pause();
 			};
 
+			//--Loop inside the oysters, on all the elements inside (panel, content, decorations)
 		    oyster.children.forEach(function (child, j){
 
+		    	//--Add the element to the clickable list
 		    	clickable_objects.push(child);
-		    	//console.log(child);
+		    	
+		    	//--Set some material properties that the blender exporter did not export
 		    	if( child.name == "EmptyKelvin") return;
 		    	if( child.material.name.includes("wire") ) child.material.wireframe=true;
 		    	if( child.name.includes("bottone") ) {
@@ -153,11 +183,13 @@ function initScene( location_json ){
 	    			child.material.opacity = 0.1;
 		    	}
 				
+		    	//--The content element displays the relevant data (for now just video)
 		    	if ( child.name.includes("content") ){  
+		    		//--Create and attach the material that will display the video 
 				    var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
-				    //var movieGeometry = new THREE.PlaneGeometry( 3, 1);
 				    child.material = movieMaterial;
-				    //child.geometry = movieGeometry;
+				    
+				    //--Set the collision behaviours
 				    reticle.add_collider(child);
 				    child.ongazelong = function(){
 					  	video.play();
@@ -173,8 +205,10 @@ function initScene( location_json ){
 					};
 		    	}
 
-		    	if ( child.name.includes("module") ){ 
 
+		    	//--There's a 3D model of the ISS, the "module" objects contains several modules
+		    	if ( child.name.includes("module") ){ 
+		    		//--Set the collision behaviours
 		    		reticle.add_collider(child);
 		    		child.ongazeover = function(){
 		    			console.log(child.name);
@@ -182,10 +216,13 @@ function initScene( location_json ){
 		    		child.material = new THREE.MeshBasicMaterial({color:0x555555});
 
 
+		    		//--The children "modules"
+
 		    		child.children.forEach(function (module, k){
 		    			clickable_objects.push(module); 
 		    			module.material = new THREE.MeshBasicMaterial({color:0x555555});
 		    			
+		    			//--Set behaviours only on the objects that contain a property exported from blender
 		    			if (module.userData.iss_module!=null){
 
 		    				console.log(module.name);
@@ -202,16 +239,16 @@ function initScene( location_json ){
 		    			}
 		    			
 		    		});
+
 		    	}
 
-		    	if (child.name.includes("panel")){
-		    		//child.material.emissive = new THREE.Color( 0xffffff );
-		    	}
+		    	//Some actions on the decorations of the panel
+		    	//--Set the emissive to use the difuse color of the object (the blender exporter didn't include the original emissive color) 
 		    	if (child.name.includes("coso") || child.name.includes("rotator") || child.name.includes("emissive")){
-		    		//child.material.emissive = new THREE.Color( 0xffffff );
 		    		child.material.emissive = child.material.color;
 		    	}
 
+		    	//Include a function to animate the "rotator" objects (since the exporter uses quaternion, making this objects to spin arround was easier this way)	
 		    	if ( child.name.includes("rotator")){
                     child.animateRot = function (child){
                         child.rotateZ(Math.random()*0.3);
@@ -220,14 +257,15 @@ function initScene( location_json ){
                 }
 		    });
 		});
-
+		
+		//--- Create the animation mixer, and play the action containing all the animations in the scene. Set ii to play in loop
 		mixer = new THREE.AnimationMixer( obj );
 	    action1 = mixer.clipAction( sceneAnimationClip1 );
 	    action1.loop=THREE.LoopRepeat;
 	    action1.play();
 
+	    //Finaly add the imported and modified object to the scene
 	    scene.add( obj );
-	    //console.log(obj);
 	});
 
 	buildSkybox(location_json.map.skybox);
@@ -236,33 +274,42 @@ function initScene( location_json ){
 
 function render(){
 	requestAnimationFrame( render );
+	//TODO: A che serviva il manager??
 	manager.render(scene, camera);
 	reticle.reticle_loop();
 
+	//--Update the controller of the orientation of the device
 	controls.update(); 
 
+	//--Get the time passed from the last render and update the animations on the mixer
 	var delta = 0.75 * clock.getDelta();
 	mixer.update(delta);
+
+
+	//--Animate the "rotator" decorations of the panels
 
 	if (rotators.length > 0) rotators.forEach(function(r) {
         r.animateRot(r);
     });
 
+	//--TODO: BOh... qualcosa di simile al delta time?	
 	var thisFrameTime = (thisLoop = new Date()) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
 	lastLoop = thisLoop;
 
+	//--Refresh the image on the canvas that displays the video
 	if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
         videoImageContext.drawImage( video, 0, 0 );
         if ( videoTexture ) 
             videoTexture.needsUpdate = true;
     }
 
-
+    //--Refresh the image of the AIM element (the loading spinning circle, or similar)
 	updateFcts.forEach(function(updateFn){
 		updateFn(frameTime/1000, thisFrameTime/1000);
 	});
 
+	//--TODO: Once an oyster is opened play the transition animation??
 	try {
 		scene.children[2].children.forEach(function(oyster, i){
 			scalefactor[i] += scalesum[i];
