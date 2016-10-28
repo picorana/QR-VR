@@ -28,12 +28,31 @@
               top: 370px;
             }
         </style>
+
+        
     </head>
     <body>
-
+    <button type="button" id="superbutton" onclick="superbuttonOnClick()" style="height:200px; width:200px; font-size: 40px">Click Me!</button>
+    <div style="color: #aaaaaa; font-size: 40px" id="superbuttonCount">0</div>
     <img id="bg-image" src="img/MinorityBG.png">
     <img id="gif01" class='gif' src="img/048_gif-onde.gif">
+    <script src='/static/js/main.js'></script>
+    <script type="text/javascript">
+            var count = 0;
+            console.log(count);
+            
+            function superbuttonOnClick(){
+                testEvent();
+            }
 
+            window.addEventListener("superbutton_clicked_event", function(e) {
+                //superbuttonOnClick();
+                console.log("uiii");
+                if (e.detail=='increment'){
+                    document.getElementById('superbuttonCount').innerHTML = ++count;
+                }
+            });
+        </script>
 
     </body>
 </html>
