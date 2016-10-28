@@ -9,6 +9,8 @@ var mouse = new THREE.Vector2();
 var clickable_objects = [];
 var clicked_objects = [];
 
+var rotators = [];
+
 var ringIndex = 0;
 var mixer, action1, sceneAnimationClip1;
 
@@ -91,7 +93,7 @@ function initScene( location_json ){
 	});
 
 	var loader = new THREE.ObjectLoader();
-	loader.load("../static/json/048_OysterTestScene.json",function ( obj ) {
+	loader.load("../static/json/048_OysterTestSceneISS.json",function ( obj ) {
 	    obj.rotation.y = Math.PI;
 	    obj.rotation.x = Math.PI/2;
 	    obj.position.z = -4;
@@ -140,9 +142,9 @@ function initScene( location_json ){
 			};
 
 		    oyster.children.forEach(function (child, j){
-		    	
+
 		    	clickable_objects.push(child);
-		    	console.log(child);
+		    	//console.log(child);
 		    	if( child.name == "EmptyKelvin") return;
 		    	if( child.material.name.includes("wire") ) child.material.wireframe=true;
 		    	if( child.name.includes("bottone") ) {
@@ -170,12 +172,52 @@ function initScene( location_json ){
 						reticle.reticle_object.geometry = new THREE.SphereGeometry(0.005, 0.005, 0.005);
 					};
 		    	}
+
+		    	if ( child.name.includes("module") ){ 
+
+		    		reticle.add_collider(child);
+		    		child.ongazeover = function(){
+		    			console.log(child.name);
+		    		};
+		    		child.material = new THREE.MeshBasicMaterial({color:0x555555});
+
+
+		    		child.children.forEach(function (module, k){
+		    			clickable_objects.push(module); 
+		    			module.material = new THREE.MeshBasicMaterial({color:0x555555});
+		    			
+		    			if (module.userData.iss_module!=null){
+
+		    				console.log(module.name);
+		    				reticle.add_collider(module);
+		    				module.ongazeover = function(){
+		    					module.material = new THREE.MeshBasicMaterial({color:0xffffff});;
+		    					console.log("module on gaze over: " + module.name);
+		    				};
+
+		    				module.ongazeout = function(){
+		    					module.material = new THREE.MeshBasicMaterial({color:0x555555});
+		    					console.log("module gaze out: " + module.name);
+		    				};
+		    			}
+		    			
+		    		});
+		    	}
+
 		    	if (child.name.includes("panel")){
-		    		child.material.emissive = new THREE.Color( 0xffffff );
+		    		//child.material.emissive = new THREE.Color( 0xffffff );
 		    	}
 		    	if (child.name.includes("coso") || child.name.includes("rotator") || child.name.includes("emissive")){
-		    		child.material.emissive = new THREE.Color( 0xffffff );
+		    		//child.material.emissive = new THREE.Color( 0xffffff );
+		    		child.material.emissive = child.material.color;
 		    	}
+
+		    	if ( child.name.includes("rotator")){
+                    child.animateRot = function (child){
+                        child.rotateZ(Math.random()*0.3);
+                    };
+                    rotators.push(child);
+                }
 		    });
 		});
 
@@ -185,7 +227,7 @@ function initScene( location_json ){
 	    action1.play();
 
 	    scene.add( obj );
-	    console.log(obj);
+	    //console.log(obj);
 	});
 
 	buildSkybox(location_json.map.skybox);
@@ -201,6 +243,10 @@ function render(){
 
 	var delta = 0.75 * clock.getDelta();
 	mixer.update(delta);
+
+	if (rotators.length > 0) rotators.forEach(function(r) {
+        r.animateRot(r);
+    });
 
 	var thisFrameTime = (thisLoop = new Date()) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
@@ -229,36 +275,11 @@ function render(){
 			});
 		});
 	} catch (e){
-		console.log(e);
+		//console.log(e);
 	}
 
 	
 }
-
-/*
-function buildSkybox(skyboxTextureArray){
-	var skyboxmaterials = [];
-    for (var i=0; i<skyboxTextureArray.length; i++){ 
-    	var path = skyboxTextureArray[i];
-    	var texture = texture_loader.load(path, function( texture ){
-    		var material = new THREE.MeshBasicMaterial( { 
-    			map: texture, 
-    			overdraw: 0.5, 
-    			shading:THREE.FlatShading, 
-    			transparent:true 
-    		});
-    		material.transparent = false;
-    		skyboxmaterials.push(material); 
-    	});
-    }
-
-	var skyboxmesh = new THREE.Mesh( 
-		new THREE.BoxGeometry( 300, 300, 300, 7, 7, 7), 
-		new THREE.MultiMaterial( skyboxmaterials ) );
-	skyboxmesh.name = "skybox";
-	skyboxmesh.scale.x = - 1;
-	scene.add( skyboxmesh );
-}*/
 
 function buildSkybox(skyboxTextureArray){
 	var skyboxmaterials = [];
@@ -312,6 +333,20 @@ function onDocumentMouseDown( event ) {
 
     mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
     mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+
+    raycaster.setFromCamera( mouse, camera );
+
+    var intersects = raycaster.intersectObjects( clickable_objects ); 
+
+    if ( intersects.length > 0 ) {
+        intersects[0].object.ongazeover();
+    }
+
+}
+
+function checkIfLookingAtModules( event ) {
+
+    event.preventDefault();
 
     raycaster.setFromCamera( mouse, camera );
 

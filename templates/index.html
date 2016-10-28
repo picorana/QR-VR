@@ -20,7 +20,24 @@
 	<script src='../static/js/lib/vreticle.js'></script>
 	<script src='../static/js/lib/dat.gui.min.js'></script>
 	<script src='../static/js/lib/threeVR/js/DeviceOrientationController.js'></script>
+	<script id="vertexShader" type="x-shader/x-vertex">
+		varying vec3 vNormal;
+		void main() 
+		{
+		    vNormal = normalize( normalMatrix * normal );
+		    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		}
+	</script>
 
+	<script id="fragmentShader" type="x-shader/x-vertex"> 
+		varying vec3 vNormal;
+		void main() 
+		{
+			float intensity = pow( 0.7 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 4.0 ); 
+		    gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;
+		}
+	</script>
+	
 	<style>
 			body {
 				background-color: rgb(100,100,100);
