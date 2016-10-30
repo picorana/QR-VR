@@ -89,6 +89,7 @@ function initScene( location_json ){
 	effect.setSize(window.innerWidth, window.innerHeight);
 	container.appendChild( renderer.domElement );
 
+	//TODOOBJ
 	//--Create the AIM element
 	var texture = texture_loader.load("../static/assets/ring/frame_0_delay-0.04s.gif");
 	for (var i=0; i<20; i++){
@@ -103,7 +104,7 @@ function initScene( location_json ){
 		if (ringIndex==20) ringIndex=0;
 	});
 
-
+	//TODO OBJ
 	//--Load the scene on JSON, containing the Oysters, Panels, Buttons and content Meshes
 	var loader = new THREE.ObjectLoader();
 	loader.load("../static/json/048_OysterTestSceneISS.json",function ( obj ) {
@@ -250,8 +251,8 @@ function initScene( location_json ){
 
 		    	//Include a function to animate the "rotator" objects (since the exporter uses quaternion, making this objects to spin arround was easier this way)	
 		    	if ( child.name.includes("rotator")){
-                    child.animateRot = function (child){
-                        child.rotateZ(Math.random()*0.3);
+                    child.animateRot = function (){
+                        this.rotateZ(Math.random()*0.3);
                     };
                     rotators.push(child);
                 }
@@ -272,6 +273,7 @@ function initScene( location_json ){
 	render();
 }
 
+//TODOOBJ
 function render(){
 	requestAnimationFrame( render );
 	//TODO: A che serviva il manager??
@@ -286,17 +288,20 @@ function render(){
 	mixer.update(delta);
 
 
+	//TODOOBJ
 	//--Animate the "rotator" decorations of the panels
 
 	if (rotators.length > 0) rotators.forEach(function(r) {
-        r.animateRot(r);
+        r.animateRot();
     });
 
+	//TODOOBJ
 	//--TODO: BOh... qualcosa di simile al delta time?	
 	var thisFrameTime = (thisLoop = new Date()) - lastLoop;
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
 	lastLoop = thisLoop;
 
+	//TODOOBJ
 	//--Refresh the image on the canvas that displays the video
 	if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
         videoImageContext.drawImage( video, 0, 0 );
@@ -304,6 +309,7 @@ function render(){
             videoTexture.needsUpdate = true;
     }
 
+    //TODOOBJ
     //--Refresh the image of the AIM element (the loading spinning circle, or similar)
 	updateFcts.forEach(function(updateFn){
 		updateFn(frameTime/1000, thisFrameTime/1000);
@@ -328,6 +334,8 @@ function render(){
 	
 }
 
+
+//TODOOBJ
 function buildSkybox(skyboxTextureArray){
 	var skyboxmaterials = [];
     for (var i=0; i<skyboxTextureArray.length; i++){ 
