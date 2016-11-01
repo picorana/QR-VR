@@ -10,6 +10,13 @@
 * @param {object} locationsJSON - the loaded JSON containing scene info
 * @param {number} [map_id = 0] - the current scene number
 * @param {object} [container = (#container)] - the DOM element where to display the scene
+*
+*******************************************************
+*
+* @prop {number} timefactor - Controls the speed of the animation updates, the larger it goes the faster the animations will update
+* @prop {array} dir - Stores a reduced hierarchy of the whole scene (filled by VRScene.getSceneOutline())
+* @prop {array} onJsonLoaded - Stores the actions that need to take place once an external scene has been loaded (pushed by VRScene.addToJsonLoadQueue())
+*
  */
 
 function VRScene(dependencies , locationsJSON, map_id, container){
@@ -29,7 +36,14 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     this.map_id = (typeof map_id === 'number')? map_id : 0;
     this.container = (typeof container === 'object')? container : document.getElementById( 'container' );
 
+    //timefactor controls the speed of the animation updates, the larger it goes the faster the animations will update
     this.timefactor = 1;
+
+    //the dir array stores a reduced hierarchy of the whole scene (filled by this.getSceneOutline())
+    this.dir = [];
+
+    //onJsonLoaded will contain the user defined actions to be executed on JSON load
+    this.onJsonLoaded = [];
 
     /**
    * Initailizate the vrScene.
@@ -112,7 +126,6 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         var skyboxmaterials = [];
         for (var i=0; i<skyboxTextureArray.length; i++){ 
             skyboxmaterials[i] = this.createMaterial(skyboxTextureArray[i]);
-            console.log(skyboxTextureArray[i]);
         }
 
         var skyboxmesh = new this.THREE.Mesh( new this.THREE.BoxGeometry( 500, 500, 500, 7, 7, 7 ), new this.THREE.MultiMaterial( skyboxmaterials ) );
@@ -121,7 +134,193 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         this.scene.add( skyboxmesh );
 
     }
+    /**
+    * Load a 3D scene or object in JSON format
+    * @function loadJsonScene
+    *
+    * @param {string} jsonURL - the location of the Json file
+    */
+
     
+    this.loadJsonScene = function( jsonURL ){
+        this.sceneDir = [];
+        var VRSCENE = this;
+       
+
+        var loader = new this.THREE.ObjectLoader();
+        loader.load( jsonURL, function ( obj ) {
+            VRSCENE.scene.add( obj );
+            // VRSCENE.getSceneOutline(false);
+            VRSCENE.onJsonLoaded.forEach(function(e){
+                e(VRSCENE);
+            });
+
+        });
+    }
+
+    /**
+    *   Enqueue the actions that need to take place once an external scene has been loaded
+    *
+    *   @function addToJsonLoadQueue
+    *
+    *   @param toBeAppended - the function to enqueue, it takes as a parameter tho VRScene objects, allowing to interface with it's methods
+    */
+
+    this.addToJsonLoadQueue = function( toBeAppended ){
+        this.onJsonLoaded.push( toBeAppended );
+    }
+
+    /**
+    * Get a tree of all the elements on the scene with their children
+    * @function getSceneOutline
+    * 
+    * @param {bool} printObjTree - if true prints the tree in console
+    */
+    this.getSceneOutline = function(printObjTree){
+        if (printObjTree) console.log("*********Scene Outline*************");
+        this.loopSceneOutline(printObjTree, this.scene.children, this.dir, 0, this);
+        if (printObjTree) console.log("*****FINISHED Scene Outline********");
+        if (printObjTree) console.log("\nThe whole outline in array:")
+        if (printObjTree) console.log(this.dir);
+        if (printObjTree) console.log("\n")
+
+    }
+
+    /**
+    *   Get an array of all the elements on the scene containing a substring in their names
+    *   
+    *   @function getObjectsContainigStr
+    *
+    *   @param {string} str - the subtring to be searched inside the names of the objects
+    *
+    *   @return {array} A list of matching objects
+    */
+
+    this.getObjectsContainigStr = function( str ){
+        var buf = [];
+        this.hierarchySearch(this.scene.children, "SOFT", "name", str, buf);
+        return buf;
+    }
+
+    /**
+    *   Get an array of all the elements on the scene by type
+    *   
+    *   @function getObjectsbyType
+    *
+    *   @param {string} type - the type of objects to get
+    *
+    *   @return {array} A list of matching objects
+    */
+
+    this.getObjectsbyType = function( type ){
+        var buf = [];
+        this.hierarchySearch(this.scene.children, "SOFT", "type", type, buf);
+        return buf;
+    }
+
+    /**
+    *   Get an array of objects with a custom property [ matching a value ]
+    *
+    *   @function getObjectsByCustomProp
+    *
+    *   @param {string} propName - the key of the custom property
+    *   @param [value] - the value to match. If null or undefined it will return al the objects having the custom property
+    *
+    *   @return {array} A list of matching objects
+    */
+
+     this.getObjectsByCustomProp = function( propName , value){
+        var buf = [];
+
+        if (typeof propName === 'undefined' &&  typeof value === 'undefined'){
+            this.hierarchySearch(this.scene.children, "CUSTOMALL", propName, value, buf);            
+            return buf
+        }
+
+        value = (typeof value === "undefined")? null : value;
+            this.hierarchySearch(this.scene.children, "CUSTOM", propName, value, buf);
+
+        return buf;
+    }
+
+    /**
+    *   Search for properties matching a string inside the hierarchy of the scene
+    *
+    *   @function hierarchySearch
+    *   
+    *   @param {array} dir -  multidimensional array containing the hierarchy of the scene. <br>Every element must be an object with the structure: {name: "..." , children: [{}, {} ,,, {} ], custom_props : {}, , , others}.<br> A good idea is to use VRScene.scene.children
+    *   @param {string} type - the type of search: "HARD" to match exact names, and "SOFT" to get the elements including the substring.
+    *   @param {string} prop - the property where to search
+    *   @param {string} str - the subtring to be searched inside the props of the objects
+    *   @param {array} dest - the array where to push the results
+    */
+
+    this.hierarchySearch = function(dir, type, prop, val, dest){
+
+        type = (typeof type === "string")? type : "SOFT";
+        var VRSCENE = this;
+
+        switch (type){
+            case "HARD":
+                dir.forEach( function (e){
+                    if(e[prop]===val) dest.push(e);
+                    VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
+                });
+                break;
+
+            case "CUSTOM":
+                dir.forEach( function (e){
+                    if( e.userData.hasOwnProperty( prop ) ) {
+                            if (e.userData[prop] == val || val === null)    dest.push(e);
+                        }
+                    VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
+                });
+                break;
+
+            case "CUSTOMALL":
+                dir.forEach( function (e){
+                    if( Object.keys(e.userData).length > 0 ) {
+                           dest.push(e);
+                        }
+                    VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
+                });
+                break;
+
+            default:
+                dir.forEach( function (e){
+                    if( e[prop].toLowerCase().includes( val.toLowerCase() ) ) dest.push(e);
+                    VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
+                });
+                break;
+        }
+
+
+        // if (type === "HARD"){
+        //     dir.forEach( function (e){
+        //         if(e[prop]===val) dest.push(e);
+        //         VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
+        //     });
+        // } else if (type ==="CUSTOM") {
+        //     dir.forEach( function (e){
+        //         if( e.userData.hasOwnProperty( prop ) ) {
+        //                 if (e.userData[prop] == val || val === null)    dest.push(e);
+        //             }
+        //         VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
+        //     });
+        // } else if (type === "CUSTOMALL") {
+        //     dir.forEach( function (e){
+        //         if( Object.keys(e.userData).length > 0 ) {
+        //                dest.push(e);
+        //             }
+        //         VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
+        //     });
+        // } else {
+        //     dir.forEach( function (e){
+        //         if( e[prop].toLowerCase().includes( val.toLowerCase() ) ) dest.push(e);
+        //         VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
+        //     });
+        // }
+    }
 
     // this.includeCustomGeometry(){
     //     //TODO
@@ -134,6 +333,40 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     /************************************************/
     /******************Util functions****************/
     /************************************************/
+    this.getTabString = function(d){
+        var chars = [];
+        if (typeof d === 'number'){
+            for (var i = 0 ; i < d ; i++){
+                if (i == d-1) chars [i] = "_";
+                else if (i == d-2) chars [i] = "\\";
+                else chars [i] = " |";
+            } 
+        }
+        return chars.join("");
+    }
+
+    this.loopSceneOutline = function(print ,source, dest, depth){
+        depth ++;
+        var VRSCENE = this;
+        var tabString = VRSCENE.getTabString(depth);
+        source.forEach(function (e){
+            if (print) console.log(tabString + e.name);
+            var element = {
+                name : e.name,
+                children : [],
+                custom_props : {}, //TODO
+                origin : e
+            }
+
+            var i = dest.push(element);
+            VRSCENE.loopSceneOutline(print, e.children, dest[i-1].children, depth);
+        
+        });
+        depth--;
+    }
+
+    
+
 
     this.createMaterial = function ( path ) {
     var texture = this.THREE.ImageUtils.loadTexture(path);
