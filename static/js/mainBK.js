@@ -48,46 +48,46 @@ function init(){
   	window.addEventListener( 'mousedown', onDocumentMouseDown , false );
 
   	//---Get scene (map_id) parameters from url
-	var map_id = getParameterByName( "map_id" );
+	// var map_id = getParameterByName( "map_id" );
 	
 	//---Load JSON containing specs about the diferents scenes, then initializate the current scene
-	$.getJSON( "/static/json/locations.json", function( json, status ) { 
-		initScene(json.locations[map_id]);	
-	})
-  	.done(	function() 									{ 		})
-  	.fail(	function(jqXHR, textStatus, errorThrown) 	{ console.log( "getJSON request failed! " + textStatus); })
-  	.always(function() 									{ console.log( "complete" );});
+	// $.getJSON( "/static/json/locations.json", function( json, status ) { 
+	// 	initScene(json.locations[map_id]);	
+	// })
+ //  	.done(	function() 									{ 		})
+ //  	.fail(	function(jqXHR, textStatus, errorThrown) 	{ console.log( "getJSON request failed! " + textStatus); })
+ //  	.always(function() 									{ console.log( "complete" );});
 }
 
 function initScene( location_json ){
 	//--Get the DOM elements where the renderer will be placed
-	container 			= document.getElementById( 'container' );
-	canvas_placeholder 	= document.createElement( 'canvas' );
+	// container 			= document.getElementById( 'container' );
+	// canvas_placeholder 	= document.createElement( 'canvas' );
 
 	//---Instantiate the basic THREE elements to construct the scene
-	camera 				= new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.3, 10000 );
-	scene 				= new THREE.Scene();
-	raycaster 			= new THREE.Raycaster();
-	mouse 				= new THREE.Vector2();
-	renderer 			= new THREE.WebGLRenderer({ antialias: true });
-	texture_loader		= new THREE.TextureLoader();
-	controls 			= new THREE.VRControls(camera);
-	effect 				= new THREE.VREffect(renderer);
-	manager 			= new WebVRManager(renderer, effect);
-	reticle 			= vreticle.Reticle(camera);
+	// camera 				= new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.3, 10000 );
+	// scene 				= new THREE.Scene();
+	// raycaster 			= new THREE.Raycaster();
+	// mouse 				= new THREE.Vector2();
+	// renderer 			= new THREE.WebGLRenderer({ antialias: true });
+	// texture_loader		= new THREE.TextureLoader();
+	// controls 			= new THREE.VRControls(camera);
+	// effect 				= new THREE.VREffect(renderer);
+	// manager 			= new WebVRManager(renderer, effect);
+	// reticle 			= vreticle.Reticle(camera);
 
 	//---First element added to scene: the camera
-	scene.add(camera);
+	// scene.add(camera);
 
 	//---Create the canvas
-	context = canvas_placeholder.getContext( '2d' );
-	context.fillStyle = 'rgb( 200, 200, 200 )';
-	context.fillRect( 0, 0, canvas_placeholder.width, canvas_placeholder.height );
+	// context = canvas_placeholder.getContext( '2d' );
+	// context.fillStyle = 'rgb( 200, 200, 200 )';
+	// context.fillRect( 0, 0, canvas_placeholder.width, canvas_placeholder.height );
 
 	//---Append the renderer to the canvas
-	renderer.setSize( window.innerWidth, window.innerHeight );
-	effect.setSize(window.innerWidth, window.innerHeight);
-	container.appendChild( renderer.domElement );
+	// renderer.setSize( window.innerWidth, window.innerHeight );
+	// effect.setSize(window.innerWidth, window.innerHeight);
+	// container.appendChild( renderer.domElement );
 
 	//TODOOBJ
 	//--Create the AIM element
@@ -109,9 +109,9 @@ function initScene( location_json ){
 	var loader = new THREE.ObjectLoader();
 	loader.load("../static/json/048_OysterTestSceneISS.json",function ( obj ) {
 	    //---Rotate the original scene to align it with the THREE generated Skybox
-		obj.rotation.y = Math.PI;
-	    obj.rotation.x = Math.PI/2;
-	    obj.position.z = -4;
+		// obj.rotation.y = Math.PI;
+	 //    obj.rotation.x = Math.PI/2;
+	 //    obj.position.z = -4;
 
 	    //---Get the Animations on the scene. The exporter creates only one, with diferent tracks for each of the animated propoerties of each object
 	    //Ex: "animations":[{"tracks":[ {panel00.position:...} , {panel00.quaternion:...} ,..., {button02.scale} ]}]
@@ -260,13 +260,13 @@ function initScene( location_json ){
 		});
 		
 		//--- Create the animation mixer, and play the action containing all the animations in the scene. Set ii to play in loop
-		mixer = new THREE.AnimationMixer( obj );
-	    action1 = mixer.clipAction( sceneAnimationClip1 );
-	    action1.loop=THREE.LoopRepeat;
-	    action1.play();
+		// mixer = new THREE.AnimationMixer( obj );
+	 //    action1 = mixer.clipAction( sceneAnimationClip1 );
+	 //    action1.loop=THREE.LoopRepeat;
+	 //    action1.play();
 
 	    //Finaly add the imported and modified object to the scene
-	    scene.add( obj );
+	    // scene.add( obj );
 	});
 
 	buildSkybox(location_json.map.skybox);

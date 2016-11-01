@@ -26,6 +26,20 @@ $.getJSON( "/static/json/locations.json", function( json, status ) {
         console.log(modulos);
 	});	
 
+	scene.addToJsonLoadQueue( function( VRS ){
+		scene.rotateLoaded(Math.PI/2 , Math.PI ,0 , "mainscene");
+		scene.setAnimation(scene.loadedAnimations[0][0], scene.loadedObjects[0]).play();
+
+		vidTxt = scene.createVideoTexture('thevideo');
+		var contentObjs = VRS.getObjectsContainigStr("content");
+
+		contentObjs.forEach(function (e){
+			//TODO
+			var movieMaterial = new THREE.MeshBasicMaterial( { map: vidTxt, overdraw: true, side:THREE.DoubleSide } );
+			e.material = movieMaterial;
+		})
+
+	});
 
 
 	scene.render();

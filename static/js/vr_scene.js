@@ -13,9 +13,11 @@
 *
 *******************************************************
 *
-* @prop {number} timefactor - Controls the speed of the animation updates, the larger it goes the faster the animations will update
-* @prop {array} dir - Stores a reduced hierarchy of the whole scene (filled by VRScene.getSceneOutline())
-* @prop {array} onJsonLoaded - Stores the actions that need to take place once an external scene has been loaded (pushed by VRScene.addToJsonLoadQueue())
+* @property {number} timefactor - Controls the speed of the animation updates, the larger it goes the faster the animations will update
+* @property {array} dir - Stores a reduced hierarchy of the whole scene (filled by VRScene.getSceneOutline())
+* @property {array} onJsonLoaded - Stores the actions that need to take place once an external scene has been loaded (pushed by VRScene.addToJsonLoadQueue())
+* @property {array} loadedObjects - Contains the external objects from THREE.ObjectLoader()
+* @property {array} loadedAnimations - LoadedAnimations will contain the external animations inside the objects loaded with THREE.ObjectLoader();
 *
  */
 
@@ -44,6 +46,17 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
     //onJsonLoaded will contain the user defined actions to be executed on JSON load
     this.onJsonLoaded = [];
+
+    //loadedObjects will contain the external objects from THREE.ObjectLoader()
+    this.loadedObjects = [];
+
+    //loadedAnimations will contain the external animations inside the objects loaded with THREE.ObjectLoader();
+    this.loadedAnimations = [];
+
+    //TODODOC
+    this.videos=[];
+    this.videoTextures=[];
+    this.videoContexts=[];
 
     /**
    * Initailizate the vrScene.
@@ -89,6 +102,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         this.container.appendChild( this.renderer.domElement );
 
     }
+
     /**
    *   Render the scene
    *
@@ -104,6 +118,22 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
         //Update the controller of the orientation of the device
         this.controls.update(); 
+
+
+        //refresh the video image
+        // if (typeof this.videoTextures[0] !== 'undefined'){
+        //     this.videoTextures.forEach(function(e,i){
+        //         // console.log(this.videoTextures.length);
+        //         // console.log(this.video.length)
+        //         if ( this.videos[i].readyState === this.videos[i].HAVE_ENOUGH_DATA ) {
+        //             this.videoContexts[i].drawImage( this.videos[i], 0, 0 );
+        //             if ( e ) 
+        //                 e.needsUpdate = true;
+        //         }
+                
+        //     });
+            
+        // }
 
 
         //Get the time passed from the last render and update the animations on the mixer
@@ -143,19 +173,96 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
     
     this.loadJsonScene = function( jsonURL ){
-        this.sceneDir = [];
-        var VRSCENE = this;
-       
+        var VRSCENE = this;       
 
         var loader = new this.THREE.ObjectLoader();
         loader.load( jsonURL, function ( obj ) {
+            VRSCENE.loadedObjects.push( obj );
+            VRSCENE.loadedAnimations.push(obj.animations)
             VRSCENE.scene.add( obj );
-            // VRSCENE.getSceneOutline(false);
+            
             VRSCENE.onJsonLoaded.forEach(function(e){
                 e(VRSCENE);
             });
 
         });
+    }
+
+    /**
+     * Rotate all or some of the loaded elements
+     * @function rotateLoaded
+     * 
+     * @param  {number} x - the x rotation
+     * @param  {number} y - the y rotation
+     * @param  {number} z - the z rotation
+     * @param {number} name - the substring to match against the name of the object to rotate, if undefined or empty, the rotation will be performed on all loaded objects (but not on the loaded childs)
+     */
+    this.rotateLoaded = function( x , y , z , name){
+        var buf = [];
+        
+        if (typeof name === 'string' && name !== "") this.hierarchySearch(this.loadedObjects, "SOFT", "name", name, buf);
+        else buf = this.loadedObjects;
+
+        buf.forEach(function(e){
+            e.rotation.x = x;
+            e.rotation.y = y;
+            e.rotation.z = z;
+        });
+    }
+
+    /**
+     * Set an animation to be played
+     *
+     * @function setAnimation
+     * 
+     * @param {object} animationClip         - The animation clip to be set
+     * @param {object} obj                   - The object to which the animation will be applied (most times it's the object that came with the animation)
+     * @param {string} [loopType = "Repeat"] - The loop type: "Once", "Repeat" or "PingPong".
+     */
+    this.setAnimation = function( animationClip , obj , loopType){
+        if (typeof this.mixer === 'undefined'){
+            this.mixer = new THREE.AnimationMixer( obj );
+        }
+        var action = this.mixer.clipAction( animationClip ); 
+        var loopTypes = {
+                        "Once": this.THREE.LoopOnce,
+                        "Repeat": this.THREE.LoopRepeat,
+                        "PingPong": this.THREE.LoopPingPong
+                        };
+        
+        action.loop = (typeof loopTypes[loopType] === 'undefined')? this.THREE.LoopRepeat : loopTypes[loopType];
+        
+        return action;
+    }
+
+    //TODO
+    this.createVideoTexture = function ( origin ) {
+        //TODO if the origin is an URL create the DOM element
+        var video = document.getElementById( origin );   
+        console.log(video.readyState); 
+        
+        var videoImage = document.createElement( 'canvas' );
+        //--Play the video on user click
+        //--TODO: Il video si attiva al cliccare anche se e' nascosto (si sente il souno)
+        document.addEventListener( 'click', function ( event ) {
+            video.play();
+        } );
+
+        //--Set the video canvas attributes
+        videoImage.width = 560;
+        videoImage.height = 320;
+        var videoImageContext = videoImage.getContext( '2d' );
+
+        //Create the videotexture that will be used on the content object's material
+        var videoTexture = new this.THREE.Texture( videoImage );
+        videoTexture.minFilter = this.THREE.LinearFilter;
+        videoTexture.magFilter = this.THREE.LinearFilter;
+
+        this.videos.push(video);
+        this.videoTextures.push(videoTexture);
+        this.videoContexts.push(videoImageContext)
+
+        return videoTexture;
     }
 
     /**
@@ -294,37 +401,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
                 break;
         }
 
-
-        // if (type === "HARD"){
-        //     dir.forEach( function (e){
-        //         if(e[prop]===val) dest.push(e);
-        //         VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
-        //     });
-        // } else if (type ==="CUSTOM") {
-        //     dir.forEach( function (e){
-        //         if( e.userData.hasOwnProperty( prop ) ) {
-        //                 if (e.userData[prop] == val || val === null)    dest.push(e);
-        //             }
-        //         VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
-        //     });
-        // } else if (type === "CUSTOMALL") {
-        //     dir.forEach( function (e){
-        //         if( Object.keys(e.userData).length > 0 ) {
-        //                dest.push(e);
-        //             }
-        //         VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
-        //     });
-        // } else {
-        //     dir.forEach( function (e){
-        //         if( e[prop].toLowerCase().includes( val.toLowerCase() ) ) dest.push(e);
-        //         VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
-        //     });
-        // }
     }
-
-    // this.includeCustomGeometry(){
-    //     //TODO
-    // }
 
     // this.createAimElement(){
     //     //TODO
@@ -365,7 +442,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         depth--;
     }
 
-    
+
 
 
     this.createMaterial = function ( path ) {
