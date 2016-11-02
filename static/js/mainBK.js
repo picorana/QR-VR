@@ -115,80 +115,80 @@ function initScene( location_json ){
 
 	    //---Get the Animations on the scene. The exporter creates only one, with diferent tracks for each of the animated propoerties of each object
 	    //Ex: "animations":[{"tracks":[ {panel00.position:...} , {panel00.quaternion:...} ,..., {button02.scale} ]}]
-	    sceneAnimationClip1 = obj.animations[0];
+	    // sceneAnimationClip1 = obj.animations[0];
 	    
 	    //--Get the video source from DOM, and create the canvas that will be used to render the video
-	    video = document.getElementById('thevideo');	
-		videoImage = document.createElement( 'canvas' );
-		//--Play the video on user click
+	 //    video = document.getElementById('thevideo');	
+		// videoImage = document.createElement( 'canvas' );
+		// //--Play the video on user click
 		//--TODO: Il video si attiva al cliccare anche se e' nascosto (si sente il souno)
-		document.addEventListener( 'click', function ( event ) {
-            video.play();
-        } );
+		// document.addEventListener( 'click', function ( event ) {
+  //           video.play();
+  //       } );
 
 		//--Set the video canvas attributes
-	    videoImage.width = 560;
-	    videoImage.height = 320;
-	    videoImageContext = videoImage.getContext( '2d' );
+	    // videoImage.width = 560;
+	    // videoImage.height = 320;
+	    // videoImageContext = videoImage.getContext( '2d' );
 
-	    //Create the videotexture that will be used on the content object's material
-	    videoTexture = new THREE.Texture( videoImage );
-	    videoTexture.minFilter = THREE.LinearFilter;
-	    videoTexture.magFilter = THREE.LinearFilter;
+	    // //Create the videotexture that will be used on the content object's material
+	    // videoTexture = new THREE.Texture( videoImage );
+	    // videoTexture.minFilter = THREE.LinearFilter;
+	    // videoTexture.magFilter = THREE.LinearFilter;
 
 
 	   	//---The top level elements on the scene are the "oysters". Here we loop on each of it's children
 		//TODO: stiamo anche loopando nella camera e il skybox??
 		obj.children.forEach(function(oyster, i){
 	    	//---Set the oysters to be colliders (detect the raycast from the camera)	
-	    	reticle.add_collider(oyster);
+	    	// reticle.add_collider(oyster);
 
 	    	//--Add the Oysters to the list of clickable
-	    	clickable_objects.push(oyster);
-
-	    	scalefactor[i] = -0.1;
-	    	scalesum[i] = 0;
-
+	    	// clickable_objects.push(oyster);
 	    	//--Set the oyster colider to be transparent
-	    	if (oyster.name.includes("gem")) return;
-	    	else {
-	    		oyster.material.wireframe=true;
-	    		oyster.material.transparent = true;
-	    		oyster.material.opacity = 0;
-	    	}
+	    	// if (oyster.name.includes("gem")) return;
+	    	// else {
+	    	// 	oyster.material.wireframe=true;
+	    	// 	oyster.material.transparent = true;
+	    	// 	oyster.material.opacity = 0;
+	    	// }
 
-	    	//--Actions when user gaze an Oyster
-			oyster.ongazeover = function(){
-				console.log("gaze over: " + oyster.name);
-				scalesum[i] = 0.1;
-			};
+	  //   	scalefactor[i] = -0.1;
+	  //   	scalesum[i] = 0;
 
-			oyster.ongazeout = function(){
-				console.log("gaze out: " + oyster.name);
-				scalesum[i] = -0.1;
-				video.pause();
-			};
+
+	  //   	//--Actions when user gaze an Oyster
+			// oyster.ongazeover = function(){
+			// 	console.log("gaze over: " + oyster.name);
+			// 	scalesum[i] = 0.1;
+			// };
+
+			// oyster.ongazeout = function(){
+			// 	console.log("gaze out: " + oyster.name);
+			// 	scalesum[i] = -0.1;
+			// 	video.pause();
+			// };
 
 			//--Loop inside the oysters, on all the elements inside (panel, content, decorations)
 		    oyster.children.forEach(function (child, j){
 
-		    	//--Add the element to the clickable list
-		    	clickable_objects.push(child);
+		    	// //--Add the element to the clickable list
+		    	// clickable_objects.push(child);
 		    	
 		    	//--Set some material properties that the blender exporter did not export
-		    	if( child.name == "EmptyKelvin") return;
-		    	if( child.material.name.includes("wire") ) child.material.wireframe=true;
-		    	if( child.name.includes("bottone") ) {
-		    		child.material.wireframe=true;
-		    		child.material.transparent = true;
-	    			child.material.opacity = 0.1;
-		    	}
+		    	// if( child.name == "EmptyKelvin") return;
+		    	// if( child.material.name.includes("wire") ) child.material.wireframe=true;
+		    	// if( child.name.includes("bottone") ) {
+		    	// 	child.material.wireframe=true;
+		    	// 	child.material.transparent = true;
+	    		// 	child.material.opacity = 0.1;
+		    	// }
 				
 		    	//--The content element displays the relevant data (for now just video)
 		    	if ( child.name.includes("content") ){  
 		    		//--Create and attach the material that will display the video 
-				    var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
-				    child.material = movieMaterial;
+				    // var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
+				    // child.material = movieMaterial;
 				    
 				    //--Set the collision behaviours
 				    reticle.add_collider(child);
@@ -273,19 +273,19 @@ function initScene( location_json ){
 	render();
 }
 
-//TODOOBJ
+
 function render(){
-	requestAnimationFrame( render );
-	//TODO: A che serviva il manager??
-	manager.render(scene, camera);
-	reticle.reticle_loop();
+	// requestAnimationFrame( render );
+	// //TODO: A che serviva il manager??
+	// manager.render(scene, camera);
+	// reticle.reticle_loop();
 
-	//--Update the controller of the orientation of the device
-	controls.update(); 
+	// //--Update the controller of the orientation of the device
+	// controls.update(); 
 
-	//--Get the time passed from the last render and update the animations on the mixer
-	var delta = 0.75 * clock.getDelta();
-	mixer.update(delta);
+	// //--Get the time passed from the last render and update the animations on the mixer
+	// var delta = 0.75 * clock.getDelta();
+	// mixer.update(delta);
 
 
 	//TODOOBJ
@@ -301,59 +301,58 @@ function render(){
 	frameTime+= (thisFrameTime - frameTime) / filterStrength;
 	lastLoop = thisLoop;
 
-	//TODOOBJ
-	//--Refresh the image on the canvas that displays the video
-	if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
-        videoImageContext.drawImage( video, 0, 0 );
-        if ( videoTexture ) 
-            videoTexture.needsUpdate = true;
-    }
+	// //--Refresh the image on the canvas that displays the video
+	// if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
+ //        videoImageContext.drawImage( video, 0, 0 );
+ //        if ( videoTexture ) 
+ //            videoTexture.needsUpdate = true;
+ //    }
 
-    //TODOOBJ
+
     //--Refresh the image of the AIM element (the loading spinning circle, or similar)
 	updateFcts.forEach(function(updateFn){
 		updateFn(frameTime/1000, thisFrameTime/1000);
 	});
 
-	//--TODO: Once an oyster is opened play the transition animation??
-	try {
-		scene.children[2].children.forEach(function(oyster, i){
-			scalefactor[i] += scalesum[i];
-			//console.log(oyster.name);
-			//scalefactor[i] = 1;
-			if (scalefactor[i]<=0.001) scalefactor[i] = 0.001;
-			if (scalefactor[i]>=1) scalefactor[i] = 1;
-			oyster.children.forEach(function(child, j){
-				child.scale.set(scalefactor[i], scalefactor[i], scalefactor[i]);
-			});
-		});
-	} catch (e){
-		//console.log(e);
-	}
+	// //--TODO: Once an oyster is opened play the transition animation??
+	// try {
+	// 	scene.children[2].children.forEach(function(oyster, i){
+	// 		scalefactor[i] += scalesum[i];
+	// 		//console.log(oyster.name);
+	// 		//scalefactor[i] = 1;
+	// 		if (scalefactor[i]<=0.001) scalefactor[i] = 0.001;
+	// 		if (scalefactor[i]>=1) scalefactor[i] = 1;
+	// 		oyster.children.forEach(function(child, j){
+	// 			child.scale.set(scalefactor[i], scalefactor[i], scalefactor[i]);
+	// 		});
+	// 	});
+	// } catch (e){
+	// 	//console.log(e);
+	// }
 
 	
 }
 
 
-//TODOOBJ
-function buildSkybox(skyboxTextureArray){
-	var skyboxmaterials = [];
-    for (var i=0; i<skyboxTextureArray.length; i++){ 
-    	skyboxmaterials[i] = createMaterial(skyboxTextureArray[i]);
-    }
 
-	var skyboxmesh = new THREE.Mesh( new THREE.BoxGeometry( 500, 500, 500, 7, 7, 7 ), new THREE.MultiMaterial( skyboxmaterials ) );
-	skyboxmesh.name = "skybox";
-	skyboxmesh.scale.x = - 1;
-	scene.add( skyboxmesh );
-}
+// function buildSkybox(skyboxTextureArray){
+// 	var skyboxmaterials = [];
+//     for (var i=0; i<skyboxTextureArray.length; i++){ 
+//     	skyboxmaterials[i] = createMaterial(skyboxTextureArray[i]);
+//     }
 
-function createMaterial( path ) {
-    var texture = THREE.ImageUtils.loadTexture(path);
-    var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, transparent:false, shading:THREE.FlatShading } );
+// 	var skyboxmesh = new THREE.Mesh( new THREE.BoxGeometry( 500, 500, 500, 7, 7, 7 ), new THREE.MultiMaterial( skyboxmaterials ) );
+// 	skyboxmesh.name = "skybox";
+// 	skyboxmesh.scale.x = - 1;
+// 	scene.add( skyboxmesh );
+// }
+
+// function createMaterial( path ) {
+//     var texture = THREE.ImageUtils.loadTexture(path);
+//     var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, transparent:false, shading:THREE.FlatShading } );
  
-    return material; 
-}
+//     return material; 
+// }
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;

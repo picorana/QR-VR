@@ -18,7 +18,12 @@
 * @property {array} onJsonLoaded - Stores the actions that need to take place once an external scene has been loaded (pushed by VRScene.addToJsonLoadQueue())
 * @property {array} loadedObjects - Contains the external objects from THREE.ObjectLoader()
 * @property {array} loadedAnimations - LoadedAnimations will contain the external animations inside the objects loaded with THREE.ObjectLoader();
+* @property {array} videos - will contain the loaded videos (filled by this.createVideoTexture ())
+* @property {array} videoContexts - will contain the created videoContexts (filled by this.createVideoTexture ())
+* @property {array} videoTextures - will contain the created videoTextures (filled by this.createVideoTexture ())
+* @property {array} clickable_objects - clickable_objects will contain the objects to be checked by the raycaster                             
 *
+* 
  */
 
 function VRScene(dependencies , locationsJSON, map_id, container){
@@ -47,16 +52,22 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     //onJsonLoaded will contain the user defined actions to be executed on JSON load
     this.onJsonLoaded = [];
 
+    //onRenderCycle will contain the user defined actions to be executed on each render cycle
+    this.onRenderCycle = [];
+
     //loadedObjects will contain the external objects from THREE.ObjectLoader()
     this.loadedObjects = [];
 
     //loadedAnimations will contain the external animations inside the objects loaded with THREE.ObjectLoader();
     this.loadedAnimations = [];
 
-    //TODODOC
+    //the videotexture's elements
     this.videos=[];
     this.videoTextures=[];
     this.videoContexts=[];
+
+    //clickable_objects will contain the objects to be checked by the raycaster
+    this.clickable_objects = [];
 
     /**
    * Initailizate the vrScene.
@@ -132,16 +143,27 @@ function VRScene(dependencies , locationsJSON, map_id, container){
             });
         }
 
-                
-            
-
-
         //Get the time passed from the last render and update the animations on the mixer
         if (typeof this.mixer !== 'undefined'){
             var delta = this.timefactor * this.clock.getDelta();
             this.mixer.update(delta);  
         } 
 
+        this.onRenderCycle.forEach(function(e){
+                e(VRSCENE);
+            });
+    }
+
+    /**
+    *   Enqueue the actions that need to take place on the render loop
+    *
+    *   @function addToRenderCycle
+    *
+    *   @param toBeAppended - the function to enqueue, it takes as a parameter the VRScene object, allowing to interface with it's methods
+    */
+
+    this.addToRenderCycle = function( toBeAppended ){
+        this.onRenderCycle.push( toBeAppended );
     }
 
     /**
@@ -186,6 +208,18 @@ function VRScene(dependencies , locationsJSON, map_id, container){
             });
 
         });
+    }
+
+    /**
+    *   Enqueue the actions that need to take place once an external scene has been loaded
+    *
+    *   @function addToJsonLoadQueue
+    *
+    *   @param toBeAppended - the function to enqueue, it takes as a parameter tho VRScene objects, allowing to interface with it's methods
+    */
+
+    this.addToJsonLoadQueue = function( toBeAppended ){
+        this.onJsonLoaded.push( toBeAppended );
     }
 
     /**
@@ -235,11 +269,16 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         return action;
     }
 
-    //TODO
+   /**
+    * Create a videotexture based on a video
+    * 
+    * @param  {string} origin - the id of the video DOM element
+    * @return {number} - the index of the arrays where the elements where stored <br>
+    *                    (this.videos , this.videoTextures , this.videoContexts)
+    */
     this.createVideoTexture = function ( origin ) {
         //TODO if the origin is an URL create the DOM element
         var video = document.getElementById( origin );   
-        console.log(video.readyState); 
         
         var videoImage = document.createElement( 'canvas' );
         //--Play the video on user click
@@ -258,23 +297,30 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         videoTexture.minFilter = this.THREE.LinearFilter;
         videoTexture.magFilter = this.THREE.LinearFilter;
 
-        this.videos.push(video);
-        this.videoTextures.push(videoTexture);
-        this.videoContexts.push(videoImageContext)
+        var videoLen = this.videos.push(video);
+        var txtLen = this.videoTextures.push(videoTexture);
+        var contextLen = this.videoContexts.push(videoImageContext)
 
-        return videoTexture;
+        if ( videoLen === txtLen && txtLen === contextLen ) return txtLen-1;
+        else return null;
     }
 
-    /**
-    *   Enqueue the actions that need to take place once an external scene has been loaded
-    *
-    *   @function addToJsonLoadQueue
-    *
-    *   @param toBeAppended - the function to enqueue, it takes as a parameter tho VRScene objects, allowing to interface with it's methods
-    */
 
-    this.addToJsonLoadQueue = function( toBeAppended ){
-        this.onJsonLoaded.push( toBeAppended );
+
+    /**
+     * Set the objects to act as colliders. Technically just adding them to the list of "clickable objects"     
+     * @param {object|array} toBeAppended - the single object or an array of objects
+     */
+    this.addToClickable = function( toBeAppended ){
+        var VRSCENE = this;
+        if (Object.prototype.toString.call( toBeAppended ) === '[object Array]'){
+            this.clickable_objects = this.clickable_objects.concat(toBeAppended);
+            this.clickable_objects.forEach(function(e){
+                VRSCENE.reticle.add_collider(e);
+            });
+        } else {
+            this.clickable_objects.push(toBeAppended);
+        }
     }
 
     /**
@@ -283,6 +329,9 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     * 
     * @param {bool} printObjTree - if true prints the tree in console
     */
+   
+
+
     this.getSceneOutline = function(printObjTree){
         if (printObjTree) console.log("*********Scene Outline*************");
         this.loopSceneOutline(printObjTree, this.scene.children, this.dir, 0, this);
@@ -299,14 +348,82 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     *   @function getObjectsContainigStr
     *
     *   @param {string} str - the subtring to be searched inside the names of the objects
+    *   @param {string} exclude - exclude the results containing this string
     *
     *   @return {array} A list of matching objects
     */
 
-    this.getObjectsContainigStr = function( str ){
+    this.getObjectsContainigStr = function( str , exclude ){
         var buf = [];
         this.hierarchySearch(this.scene.children, "SOFT", "name", str, buf);
+        if (typeof exclude !== 'undefined') {
+            buf = buf.filter(function(o){
+                return !o.name.includes( exclude );
+            })
+        }
         return buf;
+    }
+
+    /**
+    *   Get an array of all the elements on the scene containing a substring in their MATERIAL names
+    *   
+    *   @function getObjectsContainigMatStr
+    *
+    *   @param {string} str - the subtring to be searched inside the names of the material of the objects
+    *   @param {string} exclude - exclude the results containing this string
+    *
+    *   @return {array} A list of matching objects
+    */
+
+    this.getObjectsContainigMatStr = function( str , exclude ){
+        var buf = [];
+        this.hierarchySearch(this.scene.children, "MATERIAL", 'name', str, buf);
+        if (typeof exclude !== 'undefined') {
+            buf = buf.filter(function(o){
+                return !o.material.name.includes( exclude );
+            })
+        }
+        return buf;
+    }
+
+    /**
+    *   Get an array of all the material on the scene containing a substring in their names
+    *   
+    *   @function getMatsContainigStr
+    *
+    *   @param {string} str - the subtring to be searched inside the names of the material of the objects
+    *   @param {string} exclude - exclude the results containing this string
+    *
+    *   @return {array} A list of matching materials
+    */
+
+    this.getMatsContainigStr = function( str , exclude ){
+        var buf = [];
+        this.hierarchySearch(this.scene.children, "MATERIAL", 'name', str, buf);
+        if (typeof exclude !== 'undefined') {
+            buf = buf.filter(function(o){
+                return !o.material.name.includes( exclude );
+            })
+        }
+         
+         return this.getMatsFromObjs(buf);
+    }
+
+    this.getMatsFromObjs = function( list ){
+        var buf = list;
+
+        var sorted = buf.sort(function(a, b){ 
+            if(a.material.uuid < b.material.uuid) return 1; 
+            else return -1 });
+         
+         buf = sorted.filter(function(elem, i, self) {
+            if ( i-1 >= 0 )
+                return elem.material.uuid != self[i-1].material.uuid;
+            else
+                return true;
+            })
+
+        return buf.map(function(e){ return e.material });
     }
 
     /**
@@ -389,6 +506,16 @@ function VRScene(dependencies , locationsJSON, map_id, container){
                     if( Object.keys(e.userData).length > 0 ) {
                            dest.push(e);
                         }
+                    VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
+                });
+                break;
+
+            case "MATERIAL":
+                dir.forEach( function (e){
+                    if( e.material && 
+                        e.material[prop] && 
+                        e.material[prop].toLowerCase().includes( val.toLowerCase() ) ) 
+                            dest.push(e);
                     VRSCENE.hierarchySearch(e.children, type, prop, val, dest);
                 });
                 break;
