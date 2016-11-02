@@ -112,6 +112,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
     this.render = function(){
         requestAnimationFrame( this.render.bind(this) );
+        var VRSCENE = this;
         
         this.manager.render(this.scene, this.camera);
         this.reticle.reticle_loop();
@@ -121,19 +122,18 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
 
         //refresh the video image
-        // if (typeof this.videoTextures[0] !== 'undefined'){
-        //     this.videoTextures.forEach(function(e,i){
-        //         // console.log(this.videoTextures.length);
-        //         // console.log(this.video.length)
-        //         if ( this.videos[i].readyState === this.videos[i].HAVE_ENOUGH_DATA ) {
-        //             this.videoContexts[i].drawImage( this.videos[i], 0, 0 );
-        //             if ( e ) 
-        //                 e.needsUpdate = true;
-        //         }
+        if (typeof this.videoTextures[0] !== 'undefined'){
+            this.videoTextures.forEach(function(e,i){
+                if ( VRSCENE.videos[i].readyState === VRSCENE.videos[i].HAVE_ENOUGH_DATA ) {
+                    VRSCENE.videoContexts[i].drawImage( VRSCENE.videos[i], 0, 0 );
+                    if ( e ) 
+                        e.needsUpdate = true;
+                }
+            });
+        }
+
                 
-        //     });
             
-        // }
 
 
         //Get the time passed from the last render and update the animations on the mixer
