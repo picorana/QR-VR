@@ -69,6 +69,9 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     //clickable_objects will contain the objects to be checked by the raycaster
     this.clickable_objects = [];
 
+    //TODODOC
+    this.aimElementStuff = {} ;
+
     /**
    * Initailizate the vrScene.
    * @function initScene
@@ -200,7 +203,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     * @param {string} jsonURL - the location of the Json file
     */
 
-    
+
     this.loadJsonScene = function( jsonURL ){
         var VRSCENE = this;       
 
@@ -537,9 +540,22 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
     }
 
-    // this.createAimElement(){
-    //     //TODO
-    // }
+    this.createAimElement = function(maxAnimationFrames){
+        this.aimElementStuff.ring_texture_array = [] ;
+
+        for (var i=0; i<maxAnimationFrames; i++){
+            this.aimElementStuff.ring_texture_array.push(this.texture_loader.load("../static/assets/ring/frame"+i+".gif"));
+        }
+        this.aimElementStuff.ring_material = new this.THREE.MeshBasicMaterial({  transparent: true });
+        this.aimElementStuff.ring_material.needsUpdate = true;
+        this.aimElementStuff.ringIndex = 0;
+        
+        this.addToRenderCycle(function( VRSCENE ){
+            VRSCENE.aimElementStuff.ring_material.map = VRSCENE.aimElementStuff.ring_texture_array[VRSCENE.aimElementStuff.ringIndex];
+            VRSCENE.aimElementStuff.ringIndex++;
+            if (VRSCENE.aimElementStuff.ringIndex== maxAnimationFrames ) VRSCENE.aimElementStuff.ringIndex=0;
+        });
+    }
 
     /************************************************/
     /******************Util functions****************/

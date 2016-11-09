@@ -89,20 +89,20 @@ function initScene( location_json ){
 	// effect.setSize(window.innerWidth, window.innerHeight);
 	// container.appendChild( renderer.domElement );
 
-	//TODOOBJ
+	
 	//--Create the AIM element
-	var texture = texture_loader.load("../static/assets/ring/frame_0_delay-0.04s.gif");
-	for (var i=0; i<20; i++){
-		ring_texture_array.push(texture_loader.load("../static/assets/ring/frame_"+i+"_delay-0.04s.gif"));
-	}
-	texture.needsUpdate = true;
-	var ring_material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-	ring_material.needsUpdate = true;
-	updateFcts.push(function(delta, now){
-		ring_material.map = ring_texture_array[ringIndex];
-		ringIndex++;
-		if (ringIndex==20) ringIndex=0;
-	});
+	// var texture = texture_loader.load("../static/assets/ring/frame_0_delay-0.04s.gif");
+	// for (var i=0; i<20; i++){
+	// 	ring_texture_array.push(texture_loader.load("../static/assets/ring/frame_"+i+"_delay-0.04s.gif"));
+	// }
+	// texture.needsUpdate = true;
+	// var ring_material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+	// ring_material.needsUpdate = true;
+	// updateFcts.push(function(delta, now){
+	// 	ring_material.map = ring_texture_array[ringIndex];
+	// 	ringIndex++;
+	// 	if (ringIndex==20) ringIndex=0;
+	// });
 
 	//TODO OBJ
 	//--Load the scene on JSON, containing the Oysters, Panels, Buttons and content Meshes
