@@ -80,6 +80,8 @@ function VRScene(dependencies , locationsJSON, map_id, container){
    *
    */
     this.initScene = function(camFov, camAspect, camNear, camFar){
+        var VRSCENE = this;   
+
         //Camera defaults
         this.fov = (camFov === "number")? camFov : 75;
         this.aspect = (camAspect === "number")? camAspect : window.innerWidth / window.innerHeight;
@@ -111,6 +113,11 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         this.renderer.setSize( window.innerWidth, window.innerHeight );
         this.effect.setSize(window.innerWidth, window.innerHeight);
         this.container.appendChild( this.renderer.domElement );
+
+        //---Attach listeners to the devices aspect changes, and adjust screen
+        window.addEventListener( 'orientationchange',   VRSCENE.onScreenOrientationChange.bind(VRSCENE),  false );
+        window.addEventListener( 'resize',              VRSCENE.onWindowResize.bind(VRSCENE),             false );
+        window.addEventListener( 'mousedown',           VRSCENE.onDocumentMouseDown.bind(VRSCENE) ,       false );
 
     }
 
@@ -579,6 +586,37 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     return material; 
     }
 
+    this.onWindowResize = function() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+
+    this.onScreenOrientationChange = function(event){
+        this.controls.disconnect();
+        if (window.innerWidth > window.innerHeight) this.camera = new this.THREE.PerspectiveCamera( 75, window.innerHeight / window.innerWidth, 1, 1100 );
+        else this.camera = new this.THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1100 );
+        this.renderer.setSize( window.innerWidth, window.innerHeight );
+        this.controls = new DeviceOrientationController( camera, renderer.domElement );
+        this.controls.connect();
+    }
+
+    this.onDocumentMouseDown = function( event ) {
+
+        event.preventDefault();
+
+        this.mouse.x = ( event.clientX / this.renderer.domElement.clientWidth ) * 2 - 1;
+        this.mouse.y = - ( event.clientY / this.renderer.domElement.clientHeight ) * 2 + 1;
+
+        this.raycaster.setFromCamera( this.mouse, this.camera );
+
+        var intersects = this.raycaster.intersectObjects( this.clickable_objects ); 
+        if ( intersects.length > 0 ) {
+            console.log(intersects[0]);
+            intersects[0].object.ongazeover();
+        }
+
+    }
 
 }
 
