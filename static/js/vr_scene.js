@@ -97,7 +97,8 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         this.raycaster           = new this.THREE.Raycaster();
         this.mouse               = new this.THREE.Vector2();
         this.renderer            = new this.THREE.WebGLRenderer({ antialias: true });
-        this.texture_loader      = new this.THREE.TextureLoader();
+        this.texture_loader      = new this.THREE.TextureLoader(this.loading_manager);
+        this.obj_loader          = new this.THREE.ObjectLoader(this.loading_manager);
         this.controls            = new this.THREE.VRControls(this.camera);
         this.effect              = new this.THREE.VREffect(this.renderer);
         this.manager             = new this.WebVRManager(this.renderer, this.effect);
@@ -122,6 +123,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         window.addEventListener( 'resize',              VRSCENE.onWindowResize.bind(VRSCENE),             false );
         window.addEventListener( 'mousedown',           VRSCENE.onDocumentMouseDown.bind(VRSCENE) ,       false );
 
+        this.scene.add(this.camera);
     }
 
     /**
@@ -207,8 +209,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     this.loadJsonScene = function( jsonURL ){
         var VRSCENE = this;       
 
-        var loader = new this.THREE.ObjectLoader();
-        loader.load( jsonURL, function ( obj ) {
+        this.obj_loader.load( jsonURL, function ( obj ) {
             VRSCENE.loadedObjects.push( obj );
             VRSCENE.loadedAnimations.push(obj.animations)
             VRSCENE.scene.add( obj );
@@ -596,7 +597,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
 
     this.createMaterial = function ( path ) {
-    var texture = this.THREE.ImageUtils.loadTexture(path);
+    var texture = this.texture_loader.load(path);
     var material = new this.THREE.MeshBasicMaterial( { map: texture, overdraw: 0.5, transparent:false, shading:THREE.FlatShading } );
  
     return material; 

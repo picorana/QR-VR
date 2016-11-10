@@ -3,25 +3,44 @@
 
 <head>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-	<script src='./static/js/lib/threejs/build/three.js'></script>
-	<script src='./static/js/lib/threejs/examples/js/Detector.js'></script>
-	<script src='./static/js/lib/threejs/examples/js/renderers/SoftwareRenderer.js'></script>
-	<script src='./static/js/lib/threejs/examples/js/renderers/CSS3DRenderer.js'></script>
-	<script src='./static/js/lib/threejs/examples/js/renderers/CanvasRenderer.js'></script>
-	<script src='./static/js/lib/threejs/examples/js/renderers/Projector.js'></script>
-	<script src='./static/js/lib/threex.videotexture.js'></script>
-	<script src='./static/js/lib/threex.dynamictexture.js'></script>
-	<script src='./static/js/lib/StereoEffect.js'></script>
-	<script src='./static/js/lib/VRControls.js'></script>
-	<script src='./static/js/lib/VREffect.js'></script>
-	<script src='./static/js/lib/webvr-manager.js'></script>
-	<script src='./static/js/lib/webvr-polyfill.js'></script>
-	<script src='./static/js/lib/vreticle.js'></script>
-	<script src='./static/js/lib/dat.gui.min.js'></script>
-	<script src='./static/js/lib/threeVR/js/DeviceOrientationController.js'></script>
+	<script src='/static/js/lib/threejs/build/three.js'></script>
+	<script src='/static/js/lib/threejs/examples/js/Detector.js'></script>
+	<script src='/static/js/lib/threejs/examples/js/renderers/SoftwareRenderer.js'></script>
+	<script src='/static/js/lib/threejs/examples/js/renderers/CSS3DRenderer.js'></script>
+	<!--<script src='/static/js/lib/threejs/examples/js/renderers/CSS3DStereoRenderer.js'></script>-->
+	<script src='/static/js/lib/threejs/examples/js/renderers/CanvasRenderer.js'></script>
+	<script src='/static/js/lib/threejs/examples/js/renderers/Projector.js'></script>
+	<script src='/static/js/lib/threex.videotexture.js'></script>
+	<script src='/static/js/lib/threex.dynamictexture.js'></script>
+	<script src='/static/js/lib/StereoEffect.js'></script>
+	<script src='/static/js/lib/VRControls.js'></script>
+	<script src='/static/js/lib/VREffect.js'></script>
+	<script src='/static/js/lib/webvr-manager.js'></script>
+	<script src='/static/js/lib/webvr-polyfill.js'></script>
+	<script src='/static/js/lib/vreticle.js'></script>
+	<script src='/static/js/lib/dat.gui.min.js'></script>
+	<script src='/static/js/lib/threeVR/js/DeviceOrientationController.js'></script>
 
+		<script src='/static/js/vr_scene.js'></script>
+
+	<script id="vertexShader" type="x-shader/x-vertex">
+		varying vec3 vNormal;
+		void main() 
+		{
+		    vNormal = normalize( normalMatrix * normal );
+		    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		}
+	</script>
+
+	<script id="fragmentShader" type="x-shader/x-vertex"> 
+		varying vec3 vNormal;
+		void main() 
+		{
+			float intensity = pow( 0.7 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 4.0 ); 
+		    gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;
+		}
+	</script>
 	
-
 	<style>
 			body {
 				background-color: rgb(100,100,100);
@@ -31,13 +50,6 @@
 				font-size: 100%;
 			}
 
-			#info {
-				position: absolute;
-				top: 10px;
-				width: 100%;
-				text-align: center;
-			}
-
 			#fps {
 				position: absolute;
 				top: 10px;
@@ -45,17 +57,114 @@
 				text-align: left;
 				color: gray;
 			}
+
+			.divbuttons{
+				position: absolute;
+				display: inline-block;
+				top:5px;
+				left: 70%;
+			}
+
+			a.button {
+			    -webkit-appearance: button;
+			    -moz-appearance: button;
+			    appearance: button;
+			    background: #0a0a0a;
+			    text-decoration: none;
+			    color: white;
+			    padding: 5px;
+			}
+
+			#loading_screen2 {
+			    display: block;
+			    position: absolute;
+			    top: 0;
+			    left: 0;
+			    z-index: 100;
+			    width: 100vw;
+			    height: 100vh;
+			    background-color: rgba(0, 0, 0, 0.7);
+			    background-image: url("http://24.media.tumblr.com/9c177a66476ec3c5a0e9988530e1edab/tumblr_mud4qkVIBQ1s5jjtzo1_400.gif");
+			    background-repeat: no-repeat;
+			    background-position: center;
+			    text-align: center;
+			}
+
+			#loading_text {
+				position: absolute;
+			    top: 60%;
+			    left: 0;
+			    z-index: 100;
+			    width: 100vw;
+			    color: white;
+			    font-size: 40px;
+			    font-family: arial;
+			    text-align: center;
+			}
+
+			#loading_button {
+				position: relative;
+				-moz-box-shadow: 0px 10px 14px -7px #276873;
+				-webkit-box-shadow: 0px 10px 14px -7px #276873;
+				box-shadow: 0px 10px 14px -7px #276873;
+				background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #599bb3), color-stop(1, #408c99));
+				background:-moz-linear-gradient(top, #599bb3 5%, #408c99 100%);
+				background:-webkit-linear-gradient(top, #599bb3 5%, #408c99 100%);
+				background:-o-linear-gradient(top, #599bb3 5%, #408c99 100%);
+				background:-ms-linear-gradient(top, #599bb3 5%, #408c99 100%);
+				background:linear-gradient(to bottom, #599bb3 5%, #408c99 100%);
+				filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#599bb3', endColorstr='#408c99',GradientType=0);
+				background-color:#599bb3;
+				-moz-border-radius:25px;
+				-webkit-border-radius:25px;
+				border-radius:25px;
+				border:1px solid #29668f;
+				cursor:pointer;
+				font-size:20px;
+				color:#ffffff;
+				font-family:Arial;
+				font-weight:bold;
+				padding:13px 32px;
+				text-decoration:none;
+				text-shadow:0px 1px 0px #3d768a;
+			}
+
+			#loading_button_wrapper {
+				position: relative;
+				top: 70%;
+				text-align: center;
+			}
+
 	</style>
 </head>
 
 <body>
+	<div id='loading_screen'>AAAA!</div>
+	
 	<div id="container">
+		
 		<span id='fps'>fps</span>
-		<span id='info'></span>
+		
+		<div id='loading_screen2'>
+			<div id="loading_text">loading</div>
+			<div id="loading_button_wrapper"></div>
+		</div>
+
+		<video id='thevideo' style="display:none" controls>
+         	<source src="/static/assets/small.mp4" type='video/mp4'>
+		</video>
+
+		<div class="divbuttons">
+			<a href=".?map_id=0" class="button">Desert</a>
+			<a href=".?map_id=1" class="button">Moon</a>
+			<a href=".?map_id=2" class="button">Station</a>
+			<a href=".?map_id=3" class="button">Space</a>
+		</div>
 	</div>
 	
-	<script src='./static/js/device_checks.js'></script>
-	<script src='./static/js/guiobject.js'></script>
-	<script src='./static/js/main.js'></script>
+	<script src='/static/js/device_checks.js'></script>
+	<script src='/static/js/guiobject.js'></script>
+
+	<script src='/static/js/main.js'></script>
 	
 </body>
