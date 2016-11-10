@@ -123,6 +123,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         window.addEventListener( 'resize',              VRSCENE.onWindowResize.bind(VRSCENE),             false );
         window.addEventListener( 'mousedown',           VRSCENE.onDocumentMouseDown.bind(VRSCENE) ,       false );
 
+        this.camera.name = "mainCamera";
         this.scene.add(this.camera);
     }
 
@@ -314,6 +315,27 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
         if ( videoLen === txtLen && txtLen === contextLen ) return txtLen-1;
         else return null;
+    }
+
+    /**
+     * Create a plane at another object location
+     * 
+     * @param  {[type]} target   [description]
+     * @param  {[type]} material [description]
+     * @param  {[type]} offset   [description]
+     * @return {[type]}          [description]
+     */
+    this.createPlaneAtObj = function (target , material, offset ){
+        var material = (typeof material === 'object')?
+                            material :
+                            new this.THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
+        
+        var geometry = new this.THREE.PlaneGeometry( 1, 1 );
+        var plane = new this.THREE.Mesh( geometry, material );
+        var pos = new this.THREE.Vector3().setFromMatrixPosition( target.matrixWorld );
+
+        plane.position.set(pos.x , pos.y, pos.z);
+        this.scene.add(plane);
     }
 
 
