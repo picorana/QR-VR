@@ -325,7 +325,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
      * @param  {string} extension           - the image extension
      * @return {THREE.Material}             - the created material
      */
-    this.createDynamicTextureMaterial = function(maxAnimationFrames , path, extension){
+    this.createDynamicTextureMaterial = function(maxAnimationFrames , path, extension, skip){
         var sequenceStuff = {};
         var sequenceIndex = this.imageSequences.push(sequenceStuff);    
 
@@ -345,10 +345,17 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         sequenceStuff.material.needsUpdate = true;
         sequenceStuff.index = 0;
         
+        skip = (typeof skip === 'undefined' )? 0 : skip;
+        if (typeof skip !== 'number'){
+            console.log("unvalid skip number")
+            return;
+        }
+
         this.addToRenderCycle(function( VRSCENE ){
-            sequenceStuff.material.map = sequenceStuff.texture_array[sequenceStuff.index];
-            sequenceStuff.index++;
-            if (sequenceStuff.index== maxAnimationFrames ) sequenceStuff.index=0;
+            sequenceStuff.material.map = sequenceStuff.texture_array[Math.floor(sequenceStuff.index)];
+            sequenceStuff.index += 1/(skip+1)
+
+            if (sequenceStuff.index >= maxAnimationFrames ) sequenceStuff.index=0;
         });
 
         return this.imageSequences[sequenceIndex - 1].material
