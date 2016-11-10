@@ -56,7 +56,7 @@ $.getJSON( "/static/json/locations.json", function( json, status ) {
 
 		//Set colliders
 		scene.addToClickable( oystersOnScene );
-		scene.addToClickable( VRS.getObjectsContainigStr("content"));
+		//scene.addToClickable( VRS.getObjectsContainigStr("content"));
 		scene.addToClickable( VRS.getObjectsContainigStr("bottone"));
 
 		//Setup the oysters
@@ -71,17 +71,30 @@ $.getJSON( "/static/json/locations.json", function( json, status ) {
     		oyster.material.transparent = true;
     		oyster.material.opacity = 0;
 
+    		var wait_material = scene.createDynamicTextureMaterial(30, '/static/assets/wait/wait', 'gif', 1);
+    		var base_texture = scene.texture_loader.load('/static/assets/wait/wait0.gif');
+    		var base_material = new THREE.MeshBasicMaterial({transparent:true, map:base_texture});
+    		scene.reticle.reticle_object.material = base_material;
+    		scene.reticle.reticle_object.geometry = new THREE.BoxGeometry( .05, .05, .05 );
+    		//scene.reticle.reticle_object.geometry.scale(2,2,2);
 
 	    	oyster.ongazeover = function(){
 				console.log("gaze over: " + oyster.name);
 				VRS.scalesum[i] = 0.1;
+				scene.reticle.reticle_object.material = wait_material;
+			};
+
+			oyster.ongazelong = function(){
+				console.log("gaze long: " + oyster.name);
 				VRS.videos[theVideoIndex].play();
+				scene.reticle.reticle_object.material = base_material;
 			};
 
 			oyster.ongazeout = function(){
 				console.log("gaze out: " + oyster.name);
 				VRS.scalesum[i] = -0.1;
 				VRS.videos[theVideoIndex].pause();
+				scene.reticle.reticle_object.material = base_material;
 			};
 	
 		});
@@ -133,13 +146,19 @@ $.getJSON( "/static/json/locations.json", function( json, status ) {
         var button = document.createElement("button");
         button.id = "loading_button";
         button.innerHTML = "click to start";
-        document.getElementById("loading_button_wrapper").appendChild(button);
         button.onclick = function () {
-            console.log("click");
-            document.getElementById("loading_screen2").style.display = "none";
-            scene.render(); 
-        };	
-		
+	            console.log("click");
+	            document.getElementById("loading_screen2").style.display = "none";
+	            scene.render(); 
+	        };
+	    scene.loading_manager.onProgress = function (item, loaded, total) {
+	        document.getElementById("loading_text").HTML = "loading" + item;
+	    };
+        scene.loading_manager.onLoad = function () {
+		    console.log('all items loaded');
+		    document.getElementById("loading_button_wrapper").appendChild(button);
+		    document.getElementById("loading_text").style.display = 'none';
+		};
 	})
 	.fail(	 function(jqXHR, textStatus, errorThrown) 		{ console.log( "getJSON request failed! " + textStatus); })
 	.always( function() 									{ console.log( "JSON load complete" );});

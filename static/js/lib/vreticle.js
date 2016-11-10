@@ -179,7 +179,7 @@ vreticle.Reticle = function(camera) {
                 this.reticle_hit_time = null;
                 this.gazing_object = null;
                 this.gazing_time = null;
-                this.reticle_object.material = this.default_material();
+                //this.reticle_object.material = this.default_material();
             }
         }
     }

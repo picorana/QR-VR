@@ -72,6 +72,9 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     //TODODOC
     this.imageSequences = [] ;
 
+    //this enables checking if a texture / object has finished loading or not
+    this.loading_manager = new this.THREE.LoadingManager();
+    
     /**
    * Initailizate the vrScene.
    * @function initScene
