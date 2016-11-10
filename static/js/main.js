@@ -1,5 +1,6 @@
 var scene;
 var oystersOnScene, theVideoIndex, vidTxt;
+var gifIndex, gifTxt;
 
 
 var deps = {
@@ -46,6 +47,9 @@ $.getJSON( "/static/json/locations.json", function( json, status ) {
 			var movieMaterial = new THREE.MeshBasicMaterial( { map: vidTxt, overdraw: true, side:THREE.DoubleSide } );
 			e.material = movieMaterial;
 		})
+
+		////////////////////
+		// gifIndex 
 
 		//get the "oysters", but exclude the "gems"
 		oystersOnScene = VRS.getObjectsContainigStr("oyster" , "gem")

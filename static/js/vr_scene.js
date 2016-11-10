@@ -70,7 +70,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
     this.clickable_objects = [];
 
     //TODODOC
-    this.aimElementStuff = {} ;
+    this.imageSequences = [] ;
 
     /**
    * Initailizate the vrScene.
@@ -317,14 +317,51 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         else return null;
     }
 
+
+    /**
+     * Create an amiated texture from a sequence of images
+     * @param  {number} maxAnimationFrames  - the number of images in the sequence
+     * @param  {string} path                - the path to the images including the first part of the name (before the numbers)
+     * @param  {string} extension           - the image extension
+     * @return {THREE.Material}             - the created material
+     */
+    this.createDynamicTextureMaterial = function(maxAnimationFrames , path, extension){
+        var sequenceStuff = {};
+        var sequenceIndex = this.imageSequences.push(sequenceStuff);    
+
+        sequenceStuff.texture_array = [] ;
+
+        for (var i=0; i<maxAnimationFrames; i++){
+            try{
+                sequenceStuff.texture_array.push(this.texture_loader.load(path+i+"."+extension));
+
+            } catch (error) {
+                console.log("Can't' find the "+i+" frame");
+                console.log(error);
+                return;
+            }
+        }
+        sequenceStuff.material = new this.THREE.MeshBasicMaterial({  transparent: true });
+        sequenceStuff.material.needsUpdate = true;
+        sequenceStuff.index = 0;
+        
+        this.addToRenderCycle(function( VRSCENE ){
+            sequenceStuff.material.map = sequenceStuff.texture_array[sequenceStuff.index];
+            sequenceStuff.index++;
+            if (sequenceStuff.index== maxAnimationFrames ) sequenceStuff.index=0;
+        });
+
+        return this.imageSequences[sequenceIndex - 1].material
+    }
+
+
     /**
      * Create a plane at another object location
-     * 
-     * @param  {[type]} target   [description]
-     * @param  {[type]} material [description]
-     * @param  {[type]} offset   [description]
-     * @return {[type]}          [description]
-     */
+     * @param  {THREE.Object3D} target          - the objects on which postition the new plane will be created
+     * @param  [{THREE.Material}] material      - the material of the new plane
+     * @param  [{THREE.Vector3}] offset         - the position offset of the new plane
+     * @return {THREE.Mesh}                     - the created plane
+     */     
     this.createPlaneAtObj = function (target , material, offset ){
         var material = (typeof material === 'object')?
                             material :
@@ -333,9 +370,22 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         var geometry = new this.THREE.PlaneGeometry( 1, 1 );
         var plane = new this.THREE.Mesh( geometry, material );
         var pos = new this.THREE.Vector3().setFromMatrixPosition( target.matrixWorld );
+        var rot = new this.THREE.Quaternion().setFromRotationMatrix(this.camera.matrixWorld);
 
         plane.position.set(pos.x , pos.y, pos.z);
+        
+        offset = offset || {};
+        if (offset instanceof this.THREE.Vector3){
+            plane.translateX(offset.x);       
+            plane.translateY(offset.y);
+            plane.translateZ(offset.z);
+       }
+
+        plane.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+
         this.scene.add(plane);
+
+        return plane;
     }
 
 
@@ -563,22 +613,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
     }
 
-    this.createAimElement = function(maxAnimationFrames){
-        this.aimElementStuff.ring_texture_array = [] ;
-
-        for (var i=0; i<maxAnimationFrames; i++){
-            this.aimElementStuff.ring_texture_array.push(this.texture_loader.load("../static/assets/ring/frame"+i+".gif"));
-        }
-        this.aimElementStuff.ring_material = new this.THREE.MeshBasicMaterial({  transparent: true });
-        this.aimElementStuff.ring_material.needsUpdate = true;
-        this.aimElementStuff.ringIndex = 0;
-        
-        this.addToRenderCycle(function( VRSCENE ){
-            VRSCENE.aimElementStuff.ring_material.map = VRSCENE.aimElementStuff.ring_texture_array[VRSCENE.aimElementStuff.ringIndex];
-            VRSCENE.aimElementStuff.ringIndex++;
-            if (VRSCENE.aimElementStuff.ringIndex== maxAnimationFrames ) VRSCENE.aimElementStuff.ringIndex=0;
-        });
-    }
+ 
 
     /************************************************/
     /******************Util functions****************/
