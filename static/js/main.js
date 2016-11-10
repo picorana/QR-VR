@@ -71,6 +71,7 @@ $.getJSON( "/static/json/locations.json", function( json, status ) {
 	    	oyster.ongazeover = function(){
 				console.log("gaze over: " + oyster.name);
 				VRS.scalesum[i] = 0.1;
+				VRS.videos[theVideoIndex].play();
 			};
 
 			oyster.ongazeout = function(){

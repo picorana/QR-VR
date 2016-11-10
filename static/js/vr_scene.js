@@ -40,7 +40,7 @@ function VRScene(dependencies , locationsJSON, map_id, container){
 
     //TODO load a default locations.JSON as example
     this.locations = locationsJSON;
-    this.map_id = (typeof map_id === 'number')? map_id : 0;
+    this.map_id = (!isNaN(map_id))? map_id : 0;
     this.container = (typeof container === 'object')? container : document.getElementById( 'container' );
 
     //timefactor controls the speed of the animation updates, the larger it goes the faster the animations will update
@@ -294,9 +294,9 @@ function VRScene(dependencies , locationsJSON, map_id, container){
         var videoImage = document.createElement( 'canvas' );
         //--Play the video on user click
         //--TODO: Il video si attiva al cliccare anche se e' nascosto (si sente il souno)
-        document.addEventListener( 'click', function ( event ) {
+        /*document.addEventListener( 'click', function ( event ) {
             video.play();
-        } );
+        } );*/
 
         //--Set the video canvas attributes
         videoImage.width = 560;
