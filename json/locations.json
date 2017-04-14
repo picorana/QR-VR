@@ -1,0 +1,71 @@
+{
+	"locations":[
+		{
+	    	"map": {
+	    		"skybox":[
+	    			"assets/skybox/skybox_pz.jpg",
+	    			"assets/skybox/skybox_px.jpg",
+	    			"assets/skybox/skybox_py.jpg",
+	    			"assets/skybox/skybox_ny.jpg",
+	    			"assets/skybox/skybox_nz.jpg",
+	    			"assets/skybox/skybox_nx.jpg"
+	    		]
+	    	},
+	    	
+		    "creatures":[ 
+		    	{
+		    		"name":"Pikachu",
+		    		"texture":"assets/Pikachu.png",
+		    		"position":[0, 0, -2]
+		    		}
+		    	]
+	    	
+	    },
+    	
+    	{
+    		"map": {
+    			"skybox":[
+    				"assets/skybox/rightmoon.jpg",
+    				"assets/skybox/leftmoon.jpg",
+    				"assets/skybox/botmoon.jpg",
+    				"assets/skybox/topmoon.jpg",
+    				"assets/skybox/frontmoon.jpg",
+    				"assets/skybox/backmoon.jpg"
+    			]
+    		},
+    		"creatures": [
+    			{
+    				"name":"Jigglypuff",
+    				"texture":"assets/Jigglypuff.png",
+    				"position":[0, 1, 0]
+    			}
+    		]
+    	},
+	{
+    		"map": {
+    			"skybox":[
+    				"assets/iss_skybox/04.png", 
+    				"assets/iss_skybox/02.png", 
+    				"assets/iss_skybox/05.png",
+    				"assets/iss_skybox/06.png",
+    				"assets/iss_skybox/03.png",
+    				"assets/iss_skybox/01.png"
+    			]
+    		},
+    		"creatures": []
+    	},
+        {
+            "map": {
+                "skybox":[
+                    "assets/space_skybox/bkg1_right.png", 
+                    "assets/space_skybox/bkg1_left.png", 
+                    "assets/space_skybox/bkg1_top.png",
+                    "assets/space_skybox/bkg1_bot.png",
+                    "assets/space_skybox/bkg1_front.png",
+                    "assets/space_skybox/bkg1_back.png"
+                ]
+            },
+            "creatures": []
+        }
+	]
+}

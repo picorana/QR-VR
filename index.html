@@ -1,174 +1,35 @@
-<!doctype html>
-<title>Hello from Flask</title>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
+	<meta charset="UTF-8">
+	<title>VRScene basic</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-	<script src='/static/js/lib/threejs/build/three.js'></script>
-	<script src='/static/js/lib/threejs/examples/js/Detector.js'></script>
-	<script src='/static/js/lib/threejs/examples/js/renderers/SoftwareRenderer.js'></script>
-	<script src='/static/js/lib/threejs/examples/js/renderers/CSS3DRenderer.js'></script>
-	<!--<script src='/static/js/lib/threejs/examples/js/renderers/CSS3DStereoRenderer.js'></script>-->
-	<script src='/static/js/lib/threejs/examples/js/renderers/CanvasRenderer.js'></script>
-	<script src='/static/js/lib/threejs/examples/js/renderers/Projector.js'></script>
-	<script src='/static/js/lib/threex.videotexture.js'></script>
-	<script src='/static/js/lib/threex.dynamictexture.js'></script>
-	<script src='/static/js/lib/StereoEffect.js'></script>
-	<script src='/static/js/lib/VRControls.js'></script>
-	<script src='/static/js/lib/VREffect.js'></script>
-	<script src='/static/js/lib/webvr-manager.js'></script>
-	<script src='/static/js/lib/webvr-polyfill.js'></script>
-	<script src='/static/js/lib/vreticle.js'></script>
-	<script src='/static/js/lib/dat.gui.min.js'></script>
-	<script src='/static/js/lib/threeVR/js/DeviceOrientationController.js'></script>
-
-		<script src='/static/js/vr_scene.js'></script>
-
-	<script id="vertexShader" type="x-shader/x-vertex">
-		varying vec3 vNormal;
-		void main() 
-		{
-		    vNormal = normalize( normalMatrix * normal );
-		    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-		}
-	</script>
-
-	<script id="fragmentShader" type="x-shader/x-vertex"> 
-		varying vec3 vNormal;
-		void main() 
-		{
-			float intensity = pow( 0.7 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 4.0 ); 
-		    gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;
-		}
-	</script>
+	<script src='js/lib/threejs/build/three.js'></script>
 	
-	<style>
-			body {
-				background-color: rgb(100,100,100);
-				margin: 0px;
-				overflow: hidden;
-				font-family: Monospace;
-				font-size: 100%;
-			}
+	<script src='js/lib/webvr-manager.js'></script>
+	<script src='js/lib/webvr-polyfill.js'></script>
+	<script src='js/lib/vreticle.js'></script>
+	<script src='js/lib/VRControls.js'></script>
+	<script src='js/lib/VREffect.js'></script>
 
-			#fps {
-				position: absolute;
-				top: 10px;
-				width: 100%;
-				text-align: left;
-				color: gray;
-			}
+	<script src='js/vr_scene.js'></script>4
+	<script src='js/main.js'></script>
 
-			.divbuttons{
-				position: absolute;
-				display: inline-block;
-				top:5px;
-				left: 70%;
-			}
-
-			a.button {
-			    -webkit-appearance: button;
-			    -moz-appearance: button;
-			    appearance: button;
-			    background: #0a0a0a;
-			    text-decoration: none;
-			    color: white;
-			    padding: 5px;
-			}
-
-			#loading_screen2 {
-			    display: block;
-			    position: absolute;
-			    top: 0;
-			    left: 0;
-			    z-index: 100;
-			    width: 100vw;
-			    height: 100vh;
-			    background-color: rgba(0, 0, 0, 0.7);
-			    background-image: url("http://24.media.tumblr.com/9c177a66476ec3c5a0e9988530e1edab/tumblr_mud4qkVIBQ1s5jjtzo1_400.gif");
-			    background-repeat: no-repeat;
-			    background-position: center;
-			    text-align: center;
-			}
-
-			#loading_text {
-				position: absolute;
-			    top: 60%;
-			    left: 0;
-			    z-index: 100;
-			    width: 100vw;
-			    color: white;
-			    font-size: 40px;
-			    font-family: arial;
-			    text-align: center;
-			}
-
-			#loading_button {
-				position: relative;
-				color: white;
-	            border-radius: 4px;
-	            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-	            background: rgb(66, 184, 221);
-	            font-size: 125%;
-	            border-style: solid;
-	            border-color: rgb(66, 184, 221);
-			}
-
-			#loading_button_wrapper {
-				position: relative;
-				top: 60%;
-				text-align: center;
-			}
-
-	</style>
 </head>
-
 <body>
-	<div id='loading_screen'>AAAA!</div>
-	
 	<div id="container">
 		
 		<span id='fps'>fps</span>
 		
-		<div id='loading_screen2'>
+		<!-- <div id='loading_screen2'>
 			<div id="loading_text">loading<span id='loading_text_dots'/></div>
 			<div id="loading_button_wrapper"></div>
-		</div>
+		</div> -->
 
 		<video id='thevideo' style="display:none" controls>
-         	<source src="/static/assets/big_buck_bunny.webm" type='video/webm'>
+         	<source src="assets/big_buck_bunny.webm" type='video/webm'>
 		</video>
-
-		<div class="divbuttons">
-			<a href=".?map_id=0" class="button">Desert</a>
-			<a href=".?map_id=1" class="button">Moon</a>
-			<a href=".?map_id=2" class="button">Station</a>
-			<a href=".?map_id=3" class="button">Space</a>
-		</div>
 	</div>
-
-	<script>
-		var video = document.getElementById("thevideo");
-		video.play();
-		video.pause();
-		video.addEventListener('progress', function() {
-		    var loadedPercentage = this.buffered.end(0) / this.duration;
-		    console.log("percentage:" + loadedPercentage);
-		});
-	</script>
-
-	<script>
-	var dots = window.setInterval( function() {
-	    var wait = document.getElementById("loading_text_dots");
-	    if ( wait.innerHTML.length > 3 ) 
-	        wait.innerHTML = "";
-	    else 
-	        wait.innerHTML += ".";
-	    }, 1000);
-	</script>
-	
-	<script src='/static/js/device_checks.js'></script>
-	<script src='/static/js/guiobject.js'></script>
-
-	<script src='/static/js/main.js'></script>
 	
 </body>
+</html>
